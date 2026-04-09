@@ -318,8 +318,56 @@ function avc(n){let h=0;for(const c of n||'')h=(h+c.charCodeAt(0))%AVC.length;re
 function fmtVal(v){if(!v)return'—';const n=parseInt(v);if(n>=1e6)return'£'+(n/1e6).toFixed(1)+'M';if(n>=1000)return'£'+(n/1000).toFixed(0)+'K';return'£'+n;}
 function cmToFtIn(cm){if(!cm)return'—';const ti=Math.round(cm/2.54);return Math.floor(ti/12)+"'"+(ti%12)+'"';}
 function showToast(msg,col){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=col?col+'44':'';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
-function exportData(){const b=new Blob([JSON.stringify({players:S.players,version:'v12',exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='eafc26_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);showToast('Exported');}
-function importData(file){const r=new FileReader();r.onload=e=>{try{const p=JSON.parse(e.target.result);if(!p.players||!Array.isArray(p.players))throw 0;if(!confirm('Import '+p.players.length+' players?'))return;S.players=p.players;save();R();showToast('Imported '+p.players.length+' players','#22c55e');}catch{alert('Invalid file.');}};r.readAsText(file);}
+function exportData(){
+  const all={
+    version:'v12',exportedAt:new Date().toISOString(),
+    squad:localStorage.getItem('eafc26v12'),
+    matches:localStorage.getItem('eafc26_matches'),
+    transfers:localStorage.getItem('eafc26_transfers'),
+    calendar:localStorage.getItem('eafc26_calendar'),
+    gamedate:localStorage.getItem('eafc26_gamedate')
+  };
+  const b=new Blob([JSON.stringify(all,null,2)],{type:'application/json'});
+  const u=URL.createObjectURL(b);const a=document.createElement('a');
+  a.href=u;a.download='eafc26_save_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);
+  showToast('Full save exported ✓','#22c55e');
+}
+function importData(file){
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      // Support both old format (just players) and new full-save format
+      const isFullSave=d.version&&d.squad;
+      const isOldFormat=d.players&&Array.isArray(d.players);
+      if(!isFullSave&&!isOldFormat)throw new Error('Unrecognized file format.');
+      if(isFullSave){
+        const counts=[];
+        if(d.squad){const sq=JSON.parse(d.squad);if(sq.players)counts.push(sq.players.length+' players');}
+        if(d.matches){const m=JSON.parse(d.matches);counts.push(m.length+' matches');}
+        if(d.transfers){const t=JSON.parse(d.transfers);counts.push(t.length+' transfers');}
+        if(!confirm('Import full save?\n\n'+counts.join(', ')+'\n\nThis will overwrite all current data.'))return;
+        if(d.squad)localStorage.setItem('eafc26v12',d.squad);
+        if(d.matches)localStorage.setItem('eafc26_matches',d.matches);
+        if(d.transfers)localStorage.setItem('eafc26_transfers',d.transfers);
+        if(d.calendar)localStorage.setItem('eafc26_calendar',d.calendar);
+        if(d.gamedate)localStorage.setItem('eafc26_gamedate',d.gamedate);
+        // Reload all state
+        try{const sq=JSON.parse(d.squad||'{}');if(sq.players)S.players=sq.players;}catch{}
+        try{TRANSFERS=JSON.parse(d.transfers||'[]');}catch{}
+        save();saveTR();R();
+        showToast('Full save imported ✓','#22c55e');
+      } else {
+        // Legacy: squad-only import
+        if(!confirm('Import '+d.players.length+' players? This replaces your current squad.'))return;
+        S.players=d.players;save();R();
+        showToast('Squad imported ✓','#22c55e');
+      }
+    }catch(err){alert('Could not read file. Make sure it\'s a valid EAFC26 save.\n\n'+err.message);}
+  };
+  r.readAsText(file);
+}
 document.getElementById('importFile').addEventListener('change',e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value='';});
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -386,8 +434,8 @@ function buildList(){
     ]),
     h('div',{style:{display:'flex',gap:'8px',flexWrap:'wrap'}},[
       btn(S.cmpMode?'Cancel':'Compare','btn sm',()=>{S.cmpMode=!S.cmpMode;S.cmpSel=[];R();}),
-      btn('Export','btn sm',exportData),
-      h('label',{class:'btn sm',style:{cursor:'pointer'},onClick:()=>document.getElementById('importFile').click()},['Import']),
+      btn('⬇ Export Save','btn sm',exportData),
+      h('label',{class:'btn sm',style:{cursor:'pointer'},onClick:()=>document.getElementById('importFile').click()},['⬆ Import Save']),
       btn('+ Add Player','btn pri',()=>{S.modal='add';R();})
     ])
   ]));
