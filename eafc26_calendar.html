@@ -214,10 +214,10 @@ try{const d=JSON.parse(localStorage.getItem(DB_MATCHES)||'[]');MATCHES=Array.isA
 try{const d=JSON.parse(localStorage.getItem(DB_SQUAD)||'null');if(d?.players)SQUAD=d.players;}catch{}
 
 // If no game date set, default to today
-if(!GAME_DATE)GAME_DATE=new Date().toISOString().slice(0,10);
+if(!GAME_DATE)GAME_DATE=localISO(new Date());
 
-function saveCAL(){try{localStorage.setItem(DB_CAL,JSON.stringify(CAL));}catch{}}
-function saveGD(){try{localStorage.setItem(DB_GD,GAME_DATE);}catch{}}
+function saveCAL(){try{localStorage.setItem(DB_CAL,JSON.stringify(CAL));}catch(e){if(e.name==='QuotaExceededError'||e.code===22)toast('Storage full — export your save!');}}
+function saveGD(){try{localStorage.setItem(DB_GD,GAME_DATE);}catch(e){if(e.name==='QuotaExceededError'||e.code===22)toast('Storage full — export your save!');}}
 
 // Also sync saved matches into calendar events on load
 function syncMatchesToCal(){
@@ -249,8 +249,9 @@ let SELECTED_DATE=GAME_DATE;
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmtDate(d){const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
 function fmtShort(d){const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
-function todayStr(){return new Date().toISOString().slice(0,10);}
-function addDays(dateStr,n){const d=new Date(dateStr+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function localISO(d){const m=d.getMonth()+1,dy=d.getDate();return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(dy<10?'0':'')+dy;}
+function todayStr(){return localISO(new Date());}
+function addDays(dateStr,n){const d=new Date(dateStr+'T00:00:00');d.setDate(d.getDate()+n);return localISO(d);}
 function eventColor(type){return (EVENT_TYPES.find(t=>t.key===type)||{color:'#6b7280'}).color;}
 function eventIcon(type){return (EVENT_TYPES.find(t=>t.key===type)||{icon:'📌'}).icon;}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
@@ -335,19 +336,19 @@ function renderCal(){
   // Fill leading empty cells from prev month
   for(let i=0;i<firstDay;i++){
     const d2=daysInPrev-(firstDay-1-i);
-    const dateStr=new Date(year,month-1,d2).toISOString().slice(0,10);
+    const dateStr=localISO(new Date(year,month-1,d2));
     grid.appendChild(buildDayCell(dateStr,d2,true));
   }
   // Current month
   for(let d2=1;d2<=daysInMonth;d2++){
-    const dateStr=new Date(year,month,d2).toISOString().slice(0,10);
+    const dateStr=localISO(new Date(year,month,d2));
     grid.appendChild(buildDayCell(dateStr,d2,false));
   }
   // Trailing cells
   const totalCells=firstDay+daysInMonth;
   const trailing=totalCells%7===0?0:7-(totalCells%7);
   for(let d2=1;d2<=trailing;d2++){
-    const dateStr=new Date(year,month+1,d2).toISOString().slice(0,10);
+    const dateStr=localISO(new Date(year,month+1,d2));
     grid.appendChild(buildDayCell(dateStr,d2,true));
   }
 
