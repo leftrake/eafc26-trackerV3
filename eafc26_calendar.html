@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EAFC 26 · Calendar</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d13;--bg2:#111418;--bg3:#181c24;--bg4:#1f2430;--bg5:#262d3a;
+  --border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.11);--border3:rgba(255,255,255,.18);
+  --text:#dde1ec;--text2:#7c8494;--text3:#4a5062;
+  --blue:#3d7eff;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;--purple:#a855f7;--teal:#14b8a6;
+  --r:9px;--r2:13px;--r3:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:2px}
+.shell{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+
+/* ── Nav ── */
+.topnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:10px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:28px;height:28px;border-radius:8px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.logo-text{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2)}
+.logo-text b{color:var(--text)}
+.nav-links{display:flex;gap:6px;flex-wrap:wrap}
+.nav-link{padding:6px 13px;border-radius:8px;border:1px solid var(--border2);background:var(--bg2);color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;text-decoration:none;transition:all .14s;font-family:'DM Sans',sans-serif}
+.nav-link:hover{background:var(--bg3);color:var(--text)}
+.nav-link.active{background:var(--bg4);color:var(--text);border-color:var(--border3)}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .14s;white-space:nowrap}
+.btn:hover{background:var(--bg4)}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.pri:hover{background:#2c63d4}
+.btn.sm{padding:4px 10px;font-size:12px;border-radius:7px}
+.btn.xs{padding:2px 7px;font-size:11px;border-radius:6px}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--text2)}
+.btn.ghost:hover{background:var(--bg3);color:var(--text)}
+.btn.danger{color:var(--red);border-color:rgba(239,68,68,.22)}
+.btn.danger:hover{background:rgba(239,68,68,.1)}
+.btn.success{color:var(--green);border-color:rgba(34,197,94,.22)}
+.btn.success:hover{background:rgba(34,197,94,.08)}
+.btn.amber-btn{color:var(--amber);border-color:rgba(245,158,11,.22)}
+.btn.amber-btn:hover{background:rgba(245,158,11,.08)}
+.btn.icon-btn{width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px}
+
+/* ── Game date banner ── */
+.gd-banner{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r2);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.gd-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3)}
+.gd-date{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:-.5px}
+.gd-actions{display:flex;gap:6px;align-items:center;margin-left:auto;flex-wrap:wrap}
+.gd-advance{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:4px 8px}
+.gd-advance input{background:transparent;border:none;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;width:32px;text-align:center;outline:none}
+.gd-advance span{font-size:11px;color:var(--text3)}
+
+/* ── Calendar layout ── */
+.cal-layout{display:grid;grid-template-columns:1fr 300px;gap:14px;align-items:start}
+@media(max-width:760px){.cal-layout{grid-template-columns:1fr}}
+
+/* ── Month calendar ── */
+.cal-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
+.cal-month-title{font-size:15px;font-weight:600;letter-spacing:-.2px}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border)}
+.cal-wd{padding:7px 0;text-align:center;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-day{min-height:76px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:5px 6px;cursor:pointer;transition:background .12s;position:relative;vertical-align:top}
+.cal-day:nth-child(7n){border-right:none}
+.cal-day:hover{background:var(--bg3)}
+.cal-day.other-month{opacity:.35}
+.cal-day.today-game{background:rgba(61,126,255,.08);border-color:rgba(61,126,255,.2)}
+.cal-day.selected{background:rgba(61,126,255,.14)!important;outline:1px solid var(--blue);outline-offset:-1px}
+.cal-day.past{opacity:.7}
+.day-num{font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text2);line-height:1;margin-bottom:3px;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%}
+.cal-day.today-game .day-num{background:var(--blue);color:#fff}
+.cal-day.is-today .day-num{background:rgba(61,126,255,.25);color:var(--blue)}
+.day-events{display:flex;flex-direction:column;gap:2px;margin-top:2px}
+.day-event{border-radius:3px;padding:1px 5px;font-size:10px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.day-event.match{background:rgba(61,126,255,.2);color:#7aabff}
+.day-event.match.logged{background:rgba(34,197,94,.18);color:#4ade80}
+.day-event.training{background:rgba(245,158,11,.15);color:#fbbf24}
+.day-event.rest{background:rgba(107,114,128,.15);color:#9ca3af}
+.day-event.other{background:rgba(168,85,247,.15);color:#c084fc}
+.day-event.injury{background:rgba(239,68,68,.15);color:#f87171}
+.day-event.transfer{background:rgba(20,184,166,.15);color:#2dd4bf}
+
+/* ── Side panel ── */
+.side-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px}
+.side-title{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.selected-day-header{font-size:14px;font-weight:600;margin-bottom:12px}
+.event-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.event-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 11px;display:flex;align-items:flex-start;gap:8px}
+.event-item-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.event-item-body{flex:1;min-width:0}
+.event-item-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.event-item-meta{font-size:11px;color:var(--text3);margin-top:1px}
+.event-item-acts{display:flex;gap:4px;flex-shrink:0}
+.no-events{text-align:center;padding:16px 8px;color:var(--text3);font-size:12px}
+
+/* ── Upcoming list ── */
+.upcoming-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.upcoming-item:last-child{border-bottom:none}
+.upcoming-date{font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);min-width:68px;flex-shrink:0}
+.upcoming-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.upcoming-body{flex:1;min-width:0}
+.upcoming-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upcoming-meta{font-size:11px;color:var(--text3);margin-top:1px}
+
+/* ── Modal ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:20px 12px;overflow-y:auto;backdrop-filter:blur(6px)}
+.modal{background:var(--bg2);border:1px solid var(--border3);border-radius:var(--r3);width:100%;max-width:560px;display:flex;flex-direction:column;max-height:92vh;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--border);flex-shrink:0}
+.modal-title{font-size:15px;font-weight:600;letter-spacing:-.2px}
+.modal-body{overflow-y:auto;padding:18px 22px;flex:1}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 22px;border-top:1px solid var(--border);flex-shrink:0}
+
+/* Form */
+.sec{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:10px;margin-top:4px}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.fg label{font-size:10px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--text3)}
+.fg input,.fg select,.fg textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 11px;outline:none;width:100%;transition:border-color .15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue)}
+.fg select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234a5062'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;cursor:pointer}
+.fgrid{display:grid;gap:10px}
+
+/* Type chips */
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.type-chip{border:1px solid var(--border2);border-radius:8px;padding:8px 10px;cursor:pointer;text-align:center;transition:all .13s;background:var(--bg3)}
+.type-chip:hover{background:var(--bg4)}
+.type-chip.on{border-color:currentColor;background:rgba(255,255,255,.06)}
+.type-chip-icon{font-size:16px;margin-bottom:3px}
+.type-chip-label{font-size:11px;font-weight:500}
+
+/* Score board */
+.sboard{display:flex;align-items:center;justify-content:center;gap:16px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r2);padding:14px 20px;margin-bottom:12px}
+.sb-side{flex:1;text-align:center}
+.sb-lbl{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.sb-inp{width:64px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:'DM Mono',monospace;font-size:28px;font-weight:700;padding:6px 0;text-align:center;outline:none}
+.sb-inp:focus{border-color:var(--blue)}
+.sb-sep{font-size:24px;font-weight:700;color:var(--text3);font-family:'DM Mono',monospace;margin-top:22px}
+
+/* Toast */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border3);color:var(--text);padding:9px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Top nav -->
+  <div class="topnav">
+    <div class="logo">
+      <div class="logo-mark">📅</div>
+      <div class="logo-text"><b>EAFC 26</b> · CALENDAR</div>
+    </div>
+    <div class="nav-links">
+      <a class="nav-link" href="eafc26_tracker_v12.html">Squad</a>
+      <a class="nav-link" href="eafc26_matches.html">Matches</a>
+      <a class="nav-link" href="eafc26_report.html">Report</a>
+      <a class="nav-link" href="eafc26_history.html">History</a>
+      <span class="nav-link active">Calendar</span>
+    </div>
+  </div>
+
+  <!-- Game date banner -->
+  <div class="gd-banner" id="gdBanner"></div>
+
+  <!-- Main layout -->
+  <div class="cal-layout">
+    <div>
+      <div class="cal-card" id="calCard"></div>
+    </div>
+    <div>
+      <div class="side-card" id="sidePanel"></div>
+      <div class="side-card" style="margin-top:12px" id="upcomingPanel"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Constants ─────────────────────────────────────────────────────────────────
+const COMPS=['League','Cup','Champions League','Europa League','Conference League','Friendly','International'];
+const FMTS=['4-3-3','4-2-3-1','4-4-2','3-5-2','4-3-2-1','5-3-2','4-1-4-1','3-4-3'];
+const PC={GK:'#f59e0b',CB:'#3b82f6',LB:'#3b82f6',RB:'#3b82f6',CDM:'#10b981',CM:'#10b981',CAM:'#10b981',LM:'#ef4444',RW:'#ef4444',LW:'#ef4444',ST:'#ef4444',CF:'#ef4444'};
+const EVENT_TYPES=[
+  {key:'match',   label:'Match',    icon:'⚽', color:'#3d7eff'},
+  {key:'training',label:'Training', icon:'🏃', color:'#f59e0b'},
+  {key:'rest',    label:'Rest Day', icon:'😴', color:'#6b7280'},
+  {key:'transfer',label:'Transfer', icon:'🔄', color:'#14b8a6'},
+  {key:'injury',  label:'Injury',   icon:'🚑', color:'#ef4444'},
+  {key:'other',   label:'Other',    icon:'📌', color:'#a855f7'},
+];
+const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// ── Data ─────────────────────────────────────────────────────────────────────
+const DB_CAL='eafc26_calendar';
+const DB_GD='eafc26_gamedate';
+const DB_MATCHES='eafc26_matches';
+const DB_SQUAD='eafc26v12';
+
+let CAL={events:{}}; // {dateStr: [{id,type,title,note,matchData}]}
+let GAME_DATE=''; // 'YYYY-MM-DD'
+let MATCHES=[];
+let SQUAD=[];
+
+try{const d=JSON.parse(localStorage.getItem(DB_CAL)||'{}');CAL=d.events?d:{events:{}};}catch{}
+try{GAME_DATE=localStorage.getItem(DB_GD)||'';}catch{}
+try{const d=JSON.parse(localStorage.getItem(DB_MATCHES)||'[]');MATCHES=Array.isArray(d)?d:[];}catch{}
+try{const d=JSON.parse(localStorage.getItem(DB_SQUAD)||'null');if(d?.players)SQUAD=d.players;}catch{}
+
+// If no game date set, default to today
+if(!GAME_DATE)GAME_DATE=new Date().toISOString().slice(0,10);
+
+function saveCAL(){try{localStorage.setItem(DB_CAL,JSON.stringify(CAL));}catch{}}
+function saveGD(){try{localStorage.setItem(DB_GD,GAME_DATE);}catch{}}
+
+// Also sync saved matches into calendar events on load
+function syncMatchesToCal(){
+  MATCHES.forEach(m=>{
+    if(!m.date)return;
+    const eventsOnDay=(CAL.events[m.date]||[]);
+    const alreadySynced=eventsOnDay.some(e=>e.matchId===m.id);
+    if(!alreadySynced){
+      if(!CAL.events[m.date])CAL.events[m.date]=[];
+      CAL.events[m.date].push({
+        id:'match_'+m.id,matchId:m.id,type:'match',logged:true,
+        title:(m.venue==='Away'?'@ ':'vs ')+(m.opponent||'Unknown'),
+        note:m.competition+(m.formation?' · '+m.formation:''),
+        score:(m.goalsFor??0)+'-'+(m.goalsAgainst??0)
+      });
+    }
+    // Also mark existing as logged
+    eventsOnDay.forEach(e=>{if(e.matchId===m.id)e.logged=true;});
+  });
+  saveCAL();
+}
+syncMatchesToCal();
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let VIEW_DATE=new Date(GAME_DATE); // month being viewed
+VIEW_DATE.setDate(1); // normalize to 1st
+let SELECTED_DATE=GAME_DATE;
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fmtDate(d){const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
+function fmtShort(d){const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function addDays(dateStr,n){const d=new Date(dateStr+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function eventColor(type){return (EVENT_TYPES.find(t=>t.key===type)||{color:'#6b7280'}).color;}
+function eventIcon(type){return (EVENT_TYPES.find(t=>t.key===type)||{icon:'📌'}).icon;}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+function daysUntil(dateStr){const now=new Date(GAME_DATE+'T00:00:00');const then=new Date(dateStr+'T00:00:00');return Math.round((then-now)/86400000);}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function R(){
+  renderBanner();
+  renderCal();
+  renderSidePanel();
+  renderUpcoming();
+}
+
+// ── Game Date Banner ──────────────────────────────────────────────────────────
+function renderBanner(){
+  const b=document.getElementById('gdBanner');b.innerHTML='';
+  const left=mk('div');
+  left.appendChild(mk('div','gd-label','CURRENT GAME DATE'));
+  left.appendChild(mk('div','gd-date',fmtDate(GAME_DATE)));
+  b.appendChild(left);
+
+  const right=mk('div','gd-actions');
+
+  // Go to today (game date) in calendar
+  const goBtn=mk('button','btn sm ghost','Go to game date');
+  goBtn.onclick=()=>{SELECTED_DATE=GAME_DATE;VIEW_DATE=new Date(GAME_DATE+'T00:00:00');VIEW_DATE.setDate(1);R();};
+  right.appendChild(goBtn);
+
+  // Advance by N days
+  const advWrap=mk('div','gd-advance');
+  advWrap.appendChild(mk('span','','+'));
+  const advInp=mk('input');advInp.type='number';advInp.min='1';advInp.max='30';advInp.value='1';
+  advWrap.appendChild(advInp);
+  advWrap.appendChild(mk('span','','days'));
+  const advBtn=mk('button','btn sm success','Advance');
+  advBtn.onclick=()=>{
+    const n=parseInt(advInp.value)||1;
+    GAME_DATE=addDays(GAME_DATE,n);
+    saveGD();SELECTED_DATE=GAME_DATE;
+    VIEW_DATE=new Date(GAME_DATE+'T00:00:00');VIEW_DATE.setDate(1);
+    R();toast('Game date advanced to '+fmtShort(GAME_DATE));
+  };
+  right.appendChild(advWrap);right.appendChild(advBtn);
+
+  // Set specific date
+  const setInp=mk('input');setInp.type='date';setInp.value=GAME_DATE;css(setInp,{background:'var(--bg3)',border:'1px solid var(--border2)',borderRadius:'8px',color:'var(--text)',fontFamily:"'DM Mono',monospace",fontSize:'13px',padding:'4px 10px',outline:'none'});
+  setInp.onchange=e=>{GAME_DATE=e.target.value;saveGD();SELECTED_DATE=GAME_DATE;VIEW_DATE=new Date(GAME_DATE+'T00:00:00');VIEW_DATE.setDate(1);R();};
+  right.appendChild(setInp);
+
+  b.appendChild(right);
+}
+
+// ── Calendar Grid ─────────────────────────────────────────────────────────────
+function renderCal(){
+  const c=document.getElementById('calCard');c.innerHTML='';
+
+  const year=VIEW_DATE.getFullYear();
+  const month=VIEW_DATE.getMonth();
+
+  // Header
+  const head=mk('div','cal-header');
+  const prevBtn=mk('button','btn icon-btn ghost','‹');
+  prevBtn.onclick=()=>{VIEW_DATE.setMonth(month-1);R();};
+  const nextBtn=mk('button','btn icon-btn ghost','›');
+  nextBtn.onclick=()=>{VIEW_DATE.setMonth(month+1);R();};
+  const title=mk('div','cal-month-title',MONTHS[month]+' '+year);
+  head.appendChild(prevBtn);head.appendChild(title);head.appendChild(nextBtn);
+  c.appendChild(head);
+
+  // Weekday headers
+  const wdRow=mk('div','cal-weekdays');
+  DAYS.forEach(d=>{const el=mk('div','cal-wd',d);wdRow.appendChild(el);});
+  c.appendChild(wdRow);
+
+  // Grid
+  const grid=mk('div','cal-grid');
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const daysInPrev=new Date(year,month,0).getDate();
+  const today=todayStr();
+
+  // Fill leading empty cells from prev month
+  for(let i=0;i<firstDay;i++){
+    const d2=daysInPrev-(firstDay-1-i);
+    const dateStr=new Date(year,month-1,d2).toISOString().slice(0,10);
+    grid.appendChild(buildDayCell(dateStr,d2,true));
+  }
+  // Current month
+  for(let d2=1;d2<=daysInMonth;d2++){
+    const dateStr=new Date(year,month,d2).toISOString().slice(0,10);
+    grid.appendChild(buildDayCell(dateStr,d2,false));
+  }
+  // Trailing cells
+  const totalCells=firstDay+daysInMonth;
+  const trailing=totalCells%7===0?0:7-(totalCells%7);
+  for(let d2=1;d2<=trailing;d2++){
+    const dateStr=new Date(year,month+1,d2).toISOString().slice(0,10);
+    grid.appendChild(buildDayCell(dateStr,d2,true));
+  }
+
+  c.appendChild(grid);
+
+  // Add event button at bottom
+  const addBar=css(mk('div'),{padding:'10px 14px',borderTop:'1px solid var(--border)',display:'flex',gap:'8px',justifyContent:'flex-end'});
+  const addBtn=mk('button','btn sm pri','+ Add Event');
+  addBtn.onclick=()=>openEventModal(SELECTED_DATE);
+  addBar.appendChild(addBtn);
+  c.appendChild(addBar);
+}
+
+function buildDayCell(dateStr,dayNum,otherMonth){
+  const events=CAL.events[dateStr]||[];
+  const isGameDate=dateStr===GAME_DATE;
+  const isSelected=dateStr===SELECTED_DATE;
+  const isActualToday=dateStr===todayStr();
+  const isPast=dateStr<GAME_DATE;
+
+  let cls='cal-day';
+  if(otherMonth)cls+=' other-month';
+  if(isGameDate)cls+=' today-game';
+  if(isSelected)cls+=' selected';
+  if(isPast&&!otherMonth)cls+=' past';
+  if(isActualToday&&!isGameDate)cls+=' is-today';
+
+  const cell=mk('div',cls);
+  cell.onclick=()=>{SELECTED_DATE=dateStr;R();};
+
+  const numEl=mk('div','day-num',String(dayNum));
+  cell.appendChild(numEl);
+
+  const evWrap=mk('div','day-events');
+  const maxShow=3;
+  events.slice(0,maxShow).forEach(ev=>{
+    const evEl=mk('div','day-event '+ev.type+(ev.logged?' logged':''),eventIcon(ev.type)+' '+ev.title);
+    evEl.title=ev.title+(ev.note?' — '+ev.note:'');
+    evEl.onclick=e=>{e.stopPropagation();SELECTED_DATE=dateStr;R();};
+    evWrap.appendChild(evEl);
+  });
+  if(events.length>maxShow){
+    const more=mk('div','','+'+( events.length-maxShow)+' more');
+    css(more,{fontSize:'9px',color:'var(--text3)',paddingLeft:'4px',marginTop:'1px'});
+    evWrap.appendChild(more);
+  }
+  cell.appendChild(evWrap);
+  return cell;
+}
+
+// ── Side Panel ────────────────────────────────────────────────────────────────
+function renderSidePanel(){
+  const panel=document.getElementById('sidePanel');panel.innerHTML='';
+  const dayEvents=CAL.events[SELECTED_DATE]||[];
+
+  const header=mk('div','selected-day-header',fmtDate(SELECTED_DATE));
+  const daysAway=daysUntil(SELECTED_DATE);
+  const daysBadge=mk('div');
+  css(daysBadge,{fontSize:'11px',color:'var(--text3)',marginTop:'2px',marginBottom:'12px'});
+  if(SELECTED_DATE===GAME_DATE)daysBadge.textContent='Today (game date)';
+  else if(daysAway===1)daysBadge.textContent='Tomorrow in-game';
+  else if(daysAway===-1)daysBadge.textContent='Yesterday in-game';
+  else if(daysAway>0)daysBadge.textContent='In '+daysAway+' days (game time)';
+  else daysBadge.textContent=Math.abs(daysAway)+' days ago (game time)';
+  panel.appendChild(header);panel.appendChild(daysBadge);
+
+  if(dayEvents.length){
+    const list=mk('div','event-list');
+    dayEvents.forEach((ev,i)=>{
+      const col=eventColor(ev.type);
+      const item=mk('div','event-item');
+      const dot=mk('div','event-item-dot');css(dot,{background:col});
+      const body=mk('div','event-item-body');
+      const title=mk('div','event-item-title',ev.title);
+      const meta=mk('div','event-item-meta',(ev.note||'')+(ev.score?' · '+ev.score:''));
+      body.appendChild(title);if(ev.note||ev.score)body.appendChild(meta);
+      const acts=mk('div','event-item-acts');
+      // Match events: show log button if not yet logged
+      if(ev.type==='match'&&!ev.logged){
+        const logBtn=mk('button','btn xs success','Log Match');
+        logBtn.onclick=()=>openMatchLogModal(SELECTED_DATE,ev,i);
+        acts.appendChild(logBtn);
+      } else if(ev.type==='match'&&ev.logged){
+        const viewBtn=mk('button','btn xs ghost','✓ Logged');
+        css(viewBtn,{color:'var(--green)',borderColor:'rgba(34,197,94,.3)'});
+        acts.appendChild(viewBtn);
+      }
+      // Advance game date to this day
+      if(SELECTED_DATE>GAME_DATE){
+        const goBtn=mk('button','btn xs ghost','⏩');
+        goBtn.title='Advance game date to here';
+        goBtn.onclick=e=>{e.stopPropagation();if(confirm('Advance game date to '+fmtShort(SELECTED_DATE)+'?')){GAME_DATE=SELECTED_DATE;saveGD();R();toast('Game date set to '+fmtShort(GAME_DATE));}};
+        acts.appendChild(goBtn);
+      }
+      const delBtn=mk('button','btn xs danger','✕');
+      delBtn.onclick=()=>{
+        if(ev.locked)return;
+        CAL.events[SELECTED_DATE].splice(i,1);
+        if(!CAL.events[SELECTED_DATE].length)delete CAL.events[SELECTED_DATE];
+        saveCAL();R();
+      };
+      if(!ev.locked)acts.appendChild(delBtn);
+      item.appendChild(dot);item.appendChild(body);item.appendChild(acts);
+      list.appendChild(item);
+    });
+    panel.appendChild(list);
+  } else {
+    panel.appendChild(mk('div','no-events','No events. Click + Add Event below.'));
+  }
+
+  // Action buttons
+  const btnRow=css(mk('div'),{display:'flex',gap:'6px',flexWrap:'wrap'});
+  const addBtn=mk('button','btn sm pri','+ Add Event');
+  addBtn.onclick=()=>openEventModal(SELECTED_DATE);
+  const schedMatch=mk('button','btn sm amber-btn','⚽ Schedule Match');
+  schedMatch.onclick=()=>openEventModal(SELECTED_DATE,'match');
+  btnRow.appendChild(addBtn);btnRow.appendChild(schedMatch);
+
+  // If selected date > game date, show advance button
+  if(SELECTED_DATE>GAME_DATE){
+    const advBtn=mk('button','btn sm success','⏩ Advance to here');
+    advBtn.onclick=()=>{if(confirm('Advance game date to '+fmtShort(SELECTED_DATE)+'?')){GAME_DATE=SELECTED_DATE;saveGD();R();toast('Game date set to '+fmtShort(GAME_DATE));}};
+    btnRow.appendChild(advBtn);
+  }
+  panel.appendChild(btnRow);
+}
+
+// ── Upcoming panel ────────────────────────────────────────────────────────────
+function renderUpcoming(){
+  const panel=document.getElementById('upcomingPanel');panel.innerHTML='';
+  panel.appendChild(mk('div','side-title','Upcoming Events'));
+
+  // Collect all future events sorted by date
+  const upcoming=[];
+  Object.entries(CAL.events).forEach(([dateStr,evs])=>{
+    if(dateStr>=GAME_DATE){
+      evs.forEach(ev=>upcoming.push({dateStr,ev}));
+    }
+  });
+  upcoming.sort((a,b)=>a.dateStr.localeCompare(b.dateStr));
+  const shown=upcoming.slice(0,10);
+
+  if(!shown.length){panel.appendChild(mk('div','no-events','No upcoming events scheduled.'));return;}
+
+  const list=mk('div');
+  shown.forEach(({dateStr,ev})=>{
+    const col=eventColor(ev.type);
+    const item=mk('div','upcoming-item');
+    const daysUntilThis=daysUntil(dateStr);
+    const dateEl=mk('div','upcoming-date',dateStr===GAME_DATE?'Today':daysUntilThis===1?'Tomorrow':'+'+daysUntilThis+'d');
+    const dot=mk('div','upcoming-dot');css(dot,{background:col});
+    const body=mk('div','upcoming-body');
+    body.appendChild(mk('div','upcoming-title',eventIcon(ev.type)+' '+ev.title));
+    if(ev.note)body.appendChild(mk('div','upcoming-meta',ev.note));
+    item.appendChild(dateEl);item.appendChild(dot);item.appendChild(body);
+    item.onclick=()=>{SELECTED_DATE=dateStr;VIEW_DATE=new Date(dateStr+'T00:00:00');VIEW_DATE.setDate(1);R();};
+    list.appendChild(item);
+  });
+  panel.appendChild(list);
+}
+
+// ── Event Modal ───────────────────────────────────────────────────────────────
+function openEventModal(dateStr,defaultType){
+  const overlay=mk('div','overlay');
+  overlay.onclick=e=>{if(e.target===overlay)overlay.remove();};
+  document.body.appendChild(overlay);
+  const modal=mk('div','modal');overlay.appendChild(modal);
+
+  const ev={type:defaultType||'match',title:'',note:'',date:dateStr};
+
+  function redraw(){
+    modal.innerHTML='';
+    const head=mk('div','modal-head');
+    head.appendChild(mk('div','modal-title','Add Event — '+fmtShort(dateStr)));
+    const xb=mk('button','btn sm ghost','✕');xb.onclick=()=>overlay.remove();head.appendChild(xb);
+    modal.appendChild(head);
+
+    const body=mk('div','modal-body');
+
+    // Type selector
+    body.appendChild(mk('div','sec','Event Type'));
+    const typeGrid=mk('div','type-grid');
+    EVENT_TYPES.forEach(t=>{
+      const chip=mk('div','type-chip'+(ev.type===t.key?' on':''));
+      css(chip,{color:t.color});
+      chip.innerHTML='<div class="type-chip-icon">'+t.icon+'</div><div class="type-chip-label">'+t.label+'</div>';
+      chip.onclick=()=>{ev.type=t.key;redraw();};
+      typeGrid.appendChild(chip);
+    });
+    body.appendChild(typeGrid);
+
+    body.appendChild(mk('div','sec','Details'));
+
+    // Match-specific fields
+    if(ev.type==='match'){
+      const g1=css(mk('div','fgrid'),{gridTemplateColumns:'1fr 1fr',gap:'10px'});
+      g1.appendChild(fgEl('Opponent','text',ev.title,'e.g. Real Madrid',v=>ev.title=v));
+      g1.appendChild(fgSel('Competition',COMPS,ev.comp||'League',v=>ev.comp=v));
+      body.appendChild(g1);
+      const g2=css(mk('div','fgrid'),{gridTemplateColumns:'1fr 1fr',gap:'10px'});
+      g2.appendChild(fgSel('Venue',['Home','Away','Neutral'],ev.venue||'Home',v=>ev.venue=v));
+      g2.appendChild(fgSel('Formation',FMTS,ev.formation||'4-3-3',v=>ev.formation=v));
+      body.appendChild(g2);
+      body.appendChild(fgEl('Notes','text',ev.note,'Optional notes',v=>ev.note=v));
+    } else {
+      body.appendChild(fgEl('Title','text',ev.title,EVENT_TYPES.find(t=>t.key===ev.type)?.label||'Event',v=>ev.title=v));
+      body.appendChild(fgEl('Notes','text',ev.note,'Optional details…',v=>ev.note=v));
+    }
+
+    modal.appendChild(body);
+
+    const foot=mk('div','modal-foot');
+    const cancel=mk('button','btn ghost','Cancel');cancel.onclick=()=>overlay.remove();
+    const save=mk('button','btn pri','Save Event');
+    save.onclick=()=>{
+      if(!ev.title&&ev.type!=='rest'&&ev.type!=='training'){alert('Please add a title or opponent.');return;}
+      if(!CAL.events[dateStr])CAL.events[dateStr]=[];
+      const finalTitle=ev.type==='match'?((ev.venue==='Away'?'@ ':'vs ')+ev.title):ev.type==='training'?'Training':ev.type==='rest'?'Rest Day':ev.title;
+      const finalNote=ev.type==='match'?(ev.comp||'')+(ev.formation?' · '+ev.formation:''):ev.note;
+      CAL.events[dateStr].push({
+        id:Date.now().toString(),type:ev.type,title:finalTitle,note:finalNote,
+        venue:ev.venue,competition:ev.comp,formation:ev.formation,logged:false
+      });
+      saveCAL();overlay.remove();R();toast('Event added');
+    };
+    foot.appendChild(cancel);foot.appendChild(save);
+    modal.appendChild(foot);
+  }
+  redraw();
+}
+
+// ── Match Log Modal ───────────────────────────────────────────────────────────
+function openMatchLogModal(dateStr,ev,evIdx){
+  const overlay=mk('div','overlay');
+  overlay.onclick=e=>{if(e.target===overlay)overlay.remove();};
+  document.body.appendChild(overlay);
+  const modal=mk('div','modal');overlay.appendChild(modal);
+
+  const head=mk('div','modal-head');
+  head.appendChild(mk('div','modal-title','Log Match — '+fmtShort(dateStr)));
+  const xb=mk('button','btn sm ghost','✕');xb.onclick=()=>overlay.remove();head.appendChild(xb);
+  modal.appendChild(head);
+
+  const body=mk('div','modal-body');
+
+  // Pre-fill from calendar event
+  const opponent=ev.title.replace(/^(vs |@ )/,'');
+  const venue=ev.venue||'Home';
+  const comp=ev.competition||'League';
+  const formation=ev.formation||'4-3-3';
+
+  const draft={opponent,venue,competition:comp,formation,date:dateStr,goalsFor:0,goalsAgainst:0,notes:''};
+
+  // Score
+  const sb=mk('div','sboard');
+  const hs=mk('div','sb-side');hs.appendChild(mk('div','sb-lbl','YOUR TEAM'));
+  const gfInp=mk('input','sb-inp');gfInp.type='number';gfInp.min='0';gfInp.max='30';gfInp.value='0';gfInp.oninput=e=>draft.goalsFor=parseInt(e.target.value)||0;hs.appendChild(gfInp);
+  const sep=mk('div','sb-sep','–');
+  const as=mk('div','sb-side');as.appendChild(mk('div','sb-lbl','OPPONENT'));
+  const gaInp=mk('input','sb-inp');gaInp.type='number';gaInp.min='0';gaInp.max='30';gaInp.value='0';gaInp.oninput=e=>draft.goalsAgainst=parseInt(e.target.value)||0;as.appendChild(gaInp);
+  sb.appendChild(hs);sb.appendChild(sep);sb.appendChild(as);
+  body.appendChild(sb);
+
+  body.appendChild(mk('div','sec','Match Details'));
+  const g1=css(mk('div','fgrid'),{gridTemplateColumns:'1fr 1fr',gap:'10px'});
+  g1.appendChild(fgEl('Opponent','text',opponent,'',v=>draft.opponent=v));
+  g1.appendChild(fgSel('Competition',COMPS,comp,v=>draft.competition=v));
+  body.appendChild(g1);
+  const g2=css(mk('div','fgrid'),{gridTemplateColumns:'1fr 1fr',gap:'10px'});
+  g2.appendChild(fgSel('Venue',['Home','Away','Neutral'],venue,v=>draft.venue=v));
+  g2.appendChild(fgSel('Formation',FMTS,formation,v=>draft.formation=v));
+  body.appendChild(g2);
+
+  const noteWrap=mk('div','fg');
+  noteWrap.appendChild(mk('label','','Notes'));
+  const noteInp=mk('textarea');noteInp.rows=2;noteInp.placeholder='Optional match notes…';noteInp.oninput=e=>draft.notes=e.target.value;css(noteInp,{width:'100%'});
+  noteWrap.appendChild(noteInp);
+  body.appendChild(noteWrap);
+
+  body.appendChild(mk('p',null,'Player stats can be added from the Matches tab after saving.'));
+  const hint=document.createElement('p');hint.textContent='Player stats can be added from the Matches tab after saving.';
+  css(hint,{fontSize:'11px',color:'var(--text3)',marginTop:'8px'});
+  body.appendChild(hint);
+
+  modal.appendChild(body);
+
+  const foot=mk('div','modal-foot');
+  const cancel=mk('button','btn ghost','Cancel');cancel.onclick=()=>overlay.remove();
+  const save=mk('button','btn pri','Save & Log Match');
+  save.onclick=()=>{
+    if(!draft.opponent.trim()){alert('Please enter an opponent.');return;}
+    // Save to MATCHES
+    const newMatch={
+      id:Date.now().toString(),date:draft.date,competition:draft.competition,
+      venue:draft.venue,opponent:draft.opponent,goalsFor:draft.goalsFor,
+      goalsAgainst:draft.goalsAgainst,formation:draft.formation,
+      xi:[],subs:[],playerStats:{},notes:draft.notes
+    };
+    MATCHES.push(newMatch);
+    try{localStorage.setItem(DB_MATCHES,JSON.stringify(MATCHES));}catch{}
+    // Advance game date past this match
+    if(dateStr>=GAME_DATE){GAME_DATE=addDays(dateStr,1);saveGD();}
+    // Mark event as logged in calendar
+    if(CAL.events[dateStr]&&CAL.events[dateStr][evIdx]){
+      CAL.events[dateStr][evIdx].logged=true;
+      CAL.events[dateStr][evIdx].matchId=newMatch.id;
+      CAL.events[dateStr][evIdx].score=draft.goalsFor+'-'+draft.goalsAgainst;
+    }
+    saveCAL();overlay.remove();R();
+    toast('Match logged ⚽ — add player stats in the Matches tab');
+  };
+  foot.appendChild(cancel);foot.appendChild(save);
+  modal.appendChild(foot);
+}
+
+// ── DOM helpers ───────────────────────────────────────────────────────────────
+function mk(tag,cls,txt){
+  const e=document.createElement(tag);
+  if(cls)e.className=cls;
+  if(txt!=null)e.textContent=String(txt);
+  return e;
+}
+function css(e,s){Object.entries(s).forEach(([k,v])=>{try{e.style[k]=v;}catch(_){}});return e;}
+function fgEl(label,type,val,placeholder,onChange){
+  const wrap=mk('div','fg');
+  wrap.appendChild(mk('label','',label));
+  const inp=mk('input');inp.type=type;if(val)inp.value=val;if(placeholder)inp.placeholder=placeholder;
+  inp.oninput=e=>onChange(e.target.value);
+  wrap.appendChild(inp);return wrap;
+}
+function fgSel(label,options,current,onChange){
+  const wrap=mk('div','fg');
+  wrap.appendChild(mk('label','',label));
+  const sel=mk('select');
+  options.forEach(o=>{const opt=mk('option','',o);opt.value=o;if(o===current)opt.selected=true;sel.appendChild(opt);});
+  sel.onchange=e=>onChange(e.target.value);
+  wrap.appendChild(sel);return wrap;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+R();
+</script>
+</body>
+</html>
