@@ -316,7 +316,7 @@ function pcv(v){if(v>=90)return'#f59e0b';if(v>=80)return'#22c55e';if(v>=70)retur
 function ini(n){return(n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
 function avc(n){let h=0;for(const c of n||'')h=(h+c.charCodeAt(0))%AVC.length;return AVC[h];}
 function fmtVal(v){if(!v)return'—';const n=parseInt(v);if(n>=1e6)return'£'+(n/1e6).toFixed(1)+'M';if(n>=1000)return'£'+(n/1000).toFixed(0)+'K';return'£'+n;}
-function cmToFtIn(cm){if(!cm)return'—';const ti=Math.round(cm/2.54);return Math.floor(ti/12)+"'"+(ti%12)+'"';}
+function cmToFtIn(cm){if(!cm)return'—';const ti=Math.floor(cm/2.54);return Math.floor(ti/12)+"'"+(ti%12)+'"';}
 function showToast(msg,col){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=col?col+'44':'';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 function exportData(){
   const all={
@@ -354,8 +354,8 @@ function importData(file){
         if(d.calendar)localStorage.setItem('eafc26_calendar',d.calendar);
         if(d.gamedate)localStorage.setItem('eafc26_gamedate',d.gamedate);
         // Reload all state
-        try{const sq=JSON.parse(d.squad||'{}');if(sq.players)S.players=sq.players;}catch{}
-        try{TRANSFERS=JSON.parse(d.transfers||'[]');}catch{}
+        try{const sq=JSON.parse(d.squad||'{}');if(Array.isArray(sq.players))S.players=sq.players;}catch{}
+        try{const tr=JSON.parse(d.transfers||'[]');if(Array.isArray(tr))TRANSFERS=tr;}catch{}
         save();saveTR();R();
         showToast('Full save imported ✓','#22c55e');
       } else {
@@ -378,8 +378,8 @@ let TRANSFERS=[];
 try{const d=JSON.parse(localStorage.getItem(DB)||'null');if(d&&d.players)S.players=d.players;}catch{}
 if(!S.players.length){['eafc26v11','eafc26v10','eafc26v9','eafc26v8','eafc26v7','eafc26v5'].forEach(k=>{if(!S.players.length){try{const d=JSON.parse(localStorage.getItem(k)||'null');if(d?.players?.length){S.players=d.players;save();}}catch{}}});}
 try{const d=JSON.parse(localStorage.getItem(DB_TR)||'[]');TRANSFERS=Array.isArray(d)?d:[];}catch{}
-function save(){try{localStorage.setItem(DB,JSON.stringify({players:S.players}));}catch{}}
-function saveTR(){try{localStorage.setItem(DB_TR,JSON.stringify(TRANSFERS));}catch{}}
+function save(){try{localStorage.setItem(DB,JSON.stringify({players:S.players}));}catch(e){if(e.name==='QuotaExceededError'||e.code===22)showToast('Storage full — export your save!','#ef4444');}}
+function saveTR(){try{localStorage.setItem(DB_TR,JSON.stringify(TRANSFERS));}catch(e){if(e.name==='QuotaExceededError'||e.code===22)showToast('Storage full — export your save!','#ef4444');}}
 
 // ─── DOM BUILDER ──────────────────────────────────────────────────────────────
 const R=()=>{const a=document.getElementById('app');a.innerHTML='';if(S.modal)a.appendChild(buildDrawer());else if(S.view==='detail')a.appendChild(buildDetail());else if(S.view==='compare')a.appendChild(buildCompare());else if(S.view==='transfers')a.appendChild(buildTransfers());else if(S.view==='positional')a.appendChild(buildPositional());else a.appendChild(buildList());};

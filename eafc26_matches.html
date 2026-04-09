@@ -229,7 +229,7 @@ let MATCHES=[];
 try{const d=JSON.parse(localStorage.getItem('eafc26v12')||'null');if(d?.players)SQUAD=d.players;}catch{}
 if(!SQUAD.length){['eafc26v11','eafc26v10','eafc26v9'].forEach(k=>{if(!SQUAD.length)try{const d=JSON.parse(localStorage.getItem(k)||'null');if(d?.players?.length)SQUAD=d.players;}catch{}});}
 try{const d=JSON.parse(localStorage.getItem('eafc26_matches')||'[]');MATCHES=Array.isArray(d)?d:[];}catch{MATCHES=[];}
-function saveM(){try{localStorage.setItem('eafc26_matches',JSON.stringify(MATCHES));}catch{}}
+function saveM(){try{localStorage.setItem('eafc26_matches',JSON.stringify(MATCHES));}catch(e){if(e.name==='QuotaExceededError'||e.code===22)toast('Storage full — export your save!');}}
 function recomputeSquadStats(){
   // For every player, scan ALL matches and recompute their aggregate stats
   SQUAD.forEach(p=>{

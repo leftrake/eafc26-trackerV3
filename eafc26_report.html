@@ -154,6 +154,7 @@ const W_POS={GK:{"Reactions":12,"GK Diving":22,"GK Handling":22,"GK Kicking":6,"
 function getOVR(p){if(p.manualOVR)return parseInt(p.manualOVR)||0;if(!p.stats||!p.position)return 0;const w=W_POS[p.position];if(!w)return 0;const t=Object.values(w).reduce((a,b)=>a+b,0);return Math.round(Object.entries(w).reduce((s,[k,wi])=>s+(p.stats[k]||0)*wi/t,0));}
 function ini(n){return(n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
 function avcFn(n){let h=0;for(const c of n||'')h=(h+c.charCodeAt(0))%AVC.length;return AVC[h];}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function rcol(r){const v=parseFloat(r);if(!v)return'#6b7280';if(v>=8)return'#22c55e';if(v>=7)return'#3d7eff';if(v>=6)return'#f59e0b';return'#ef4444';}
 function fmtFee(m){if(!m)return'Free';const v=parseFloat(m);if(!v)return'Free';return'£'+v.toFixed(1)+'M';}
 
@@ -224,10 +225,10 @@ function buildPreview(){
       const card=div('pcard');
       card.innerHTML=`
         <div class="pcard-head">
-          <div class="pcard-av" style="background:${avcFn(p.name)}22;color:${avcFn(p.name)};border:1px solid ${avcFn(p.name)}33">${ini(p.name)}</div>
+          <div class="pcard-av" style="background:${avcFn(p.name)}22;color:${avcFn(p.name)};border:1px solid ${avcFn(p.name)}33">${esc(ini(p.name))}</div>
           <div style="flex:1;min-width:0">
-            <div class="pcard-name">${p.name||'?'}</div>
-            <div class="pcard-meta"><span class="badge" style="background:${pc2}22;color:${pc2}">${p.position||'?'}</span>${p.age?' · '+p.age+'y':''}</div>
+            <div class="pcard-name">${esc(p.name)||'?'}</div>
+            <div class="pcard-meta"><span class="badge" style="background:${pc2}22;color:${pc2}">${esc(p.position)||'?'}</span>${p.age?' · '+p.age+'y':''}</div>
           </div>
           <div class="ovr-badge" style="color:${p.manualOVR?'var(--amber)':'var(--blue)'}">${ovr||'—'}</div>
         </div>
@@ -251,7 +252,7 @@ function buildPreview(){
       const pc2=PC[p.position]||'#6b7280';
       const pot=p.potHigh?p.potLow+'-'+p.potHigh:'—';
       const card=div('pcard');
-      card.innerHTML=`<div class="pcard-head"><div class="pcard-av" style="background:${avcFn(p.name)}22;color:${avcFn(p.name)}">${ini(p.name)}</div><div style="flex:1;min-width:0"><div class="pcard-name">${p.name||'?'}</div><div class="pcard-meta"><span class="badge" style="background:${pc2}22;color:${pc2}">${p.position||'?'}</span>${p.age?' · '+p.age+'y':''}</div></div><div style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:var(--amber)">${pot}</div></div>`;
+      card.innerHTML=`<div class="pcard-head"><div class="pcard-av" style="background:${avcFn(p.name)}22;color:${avcFn(p.name)}">${esc(ini(p.name))}</div><div style="flex:1;min-width:0"><div class="pcard-name">${esc(p.name)||'?'}</div><div class="pcard-meta"><span class="badge" style="background:${pc2}22;color:${pc2}">${esc(p.position)||'?'}</span>${p.age?' · '+p.age+'y':''}</div></div><div style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:var(--amber)">${pot}</div></div>`;
       grid2.appendChild(card);
     });
     ac.appendChild(grid2);
@@ -268,7 +269,7 @@ function buildPreview(){
       const col=isW?'#22c55e':isD?'#f59e0b':'#ef4444';
       const resL=isW?'W':isD?'D':'L';
       const row=div('match-row');
-      row.innerHTML=`<div class="mres" style="background:${col}22;color:${col}">${resL}</div><div class="mdate">${m.date||'—'}</div><div style="flex:1;font-size:13px">${(m.venue==='Away'?'@ ':'vs ')}${m.opponent||'?'}</div><div style="font-family:'DM Mono',monospace;font-weight:600;color:${col};font-size:14px">${m.goalsFor??0}–${m.goalsAgainst??0}</div><div style="font-size:11px;color:var(--text3);min-width:80px;text-align:right">${m.competition||''}</div>`;
+      row.innerHTML=`<div class="mres" style="background:${col}22;color:${col}">${resL}</div><div class="mdate">${m.date||'—'}</div><div style="flex:1;font-size:13px">${(m.venue==='Away'?'@ ':'vs ')}${esc(m.opponent)||'?'}</div><div style="font-family:'DM Mono',monospace;font-weight:600;color:${col};font-size:14px">${m.goalsFor??0}–${m.goalsAgainst??0}</div><div style="font-size:11px;color:var(--text3);min-width:80px;text-align:right">${esc(m.competition||'')}</div>`;
       mc.appendChild(row);
     });
     el.appendChild(mc);
@@ -494,7 +495,7 @@ function buildPrintArea(){
   let perfTableHtml=`<div class="pr-section"><div class="pr-section-title">Season Performance</div><table class="pr-match-table"><thead><tr><th>Player</th><th>Position</th><th>OVR</th><th>Apps</th><th>Goals</th><th>Assists</th><th>Avg Rating</th><th>MOTM</th></tr></thead><tbody>`;
   FIRST.forEach(p=>{
     const ms=p.matchStats||{};const ovr=getOVR(p);
-    perfTableHtml+=`<tr><td style="font-weight:600">${p.name}</td><td>${p.position||'—'}</td><td style="font-family:monospace;font-weight:700">${ovr}</td><td>${ms.apps||0}</td><td>${ms.goals||0}</td><td>${ms.assists||0}</td><td style="font-family:monospace;font-weight:600">${ms.avgRating?.toFixed(1)||'—'}</td><td>${ms.motms||0}</td></tr>`;
+    perfTableHtml+=`<tr><td style="font-weight:600">${esc(p.name)}</td><td>${esc(p.position)||'—'}</td><td style="font-family:monospace;font-weight:700">${ovr}</td><td>${ms.apps||0}</td><td>${ms.goals||0}</td><td>${ms.assists||0}</td><td style="font-family:monospace;font-weight:600">${ms.avgRating?.toFixed(1)||'—'}</td><td>${ms.motms||0}</td></tr>`;
   });
   perfTableHtml+=`</tbody></table></div>`;
   p2.innerHTML+=perfTableHtml;
@@ -505,14 +506,14 @@ function buildPrintArea(){
     const ovr=getOVR(p);const ms=p.matchStats||{};const w=W_POS[p.position]||{};
     const topStats=Object.entries(w).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([s])=>`<span class="pr-top-stat-chip">${s}: ${p.stats?.[s]||'—'}</span>`).join('');
     let html=`<div class="pr-player-block">
-      <div class="pr-player-name">${p.name} <span style="font-size:13px;font-weight:400;color:#6b7280">${p.position}${p.age?' · '+p.age+'y':''}</span></div>
-      <div class="pr-player-meta">${p.nationality||''}${p.foot?' · Pref foot: '+p.foot:''}${p.contractEnd?' · Contract: '+p.contractEnd:''}</div>
+      <div class="pr-player-name">${esc(p.name)} <span style="font-size:13px;font-weight:400;color:#6b7280">${esc(p.position)}${p.age?' · '+p.age+'y':''}</span></div>
+      <div class="pr-player-meta">${esc(p.nationality||'')}${p.foot?' · Pref foot: '+esc(p.foot):''}${p.contractEnd?' · Contract: '+esc(p.contractEnd):''}</div>
       <div class="pr-stat-row">
         <div class="pr-stat"><div class="pr-stat-v">${ovr}</div><div class="pr-stat-l">OVR</div></div>
         ${ms.apps?`<div class="pr-stat"><div class="pr-stat-v">${ms.apps}</div><div class="pr-stat-l">Apps</div></div><div class="pr-stat"><div class="pr-stat-v">${ms.goals||0}</div><div class="pr-stat-l">Goals</div></div><div class="pr-stat"><div class="pr-stat-v">${ms.assists||0}</div><div class="pr-stat-l">Assists</div></div><div class="pr-stat"><div class="pr-stat-v">${ms.avgRating?.toFixed(1)||'—'}</div><div class="pr-stat-l">Rating</div></div>`:''}
       </div>
       <div class="pr-top-stats">${topStats}</div>
-      ${p.notes?`<div style="margin-top:8px;font-size:11px;color:#6b7280;font-style:italic">${p.notes}</div>`:''}
+      ${p.notes?`<div style="margin-top:8px;font-size:11px;color:#6b7280;font-style:italic">${esc(p.notes)}</div>`:''}
     </div>`;
     p2.innerHTML+=html;
   });
@@ -525,8 +526,8 @@ function buildPrintArea(){
     p3.innerHTML+=`<div class="pr-analysis-box"><div class="pr-analysis-title">INSTRUCTION FOR AI</div><div class="pr-analysis-item">Based on the ages and potential ranges listed, identify which academy players have the highest ceiling and are most likely to break into the first team.</div><div class="pr-analysis-item">Consider their positions relative to gaps in the first team squad depth.</div></div>`;
     ACADEMY.forEach(p=>{
       const pot=p.potHigh?p.potLow+'–'+p.potHigh:'Unknown';
-      const allStats=p.stats?Object.entries(p.stats).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v])=>`<span class="pr-top-stat-chip">${k}: ${v}</span>`).join(''):'';
-      p3.innerHTML+=`<div class="pr-player-block"><div class="pr-player-name">${p.name} <span style="font-size:13px;font-weight:400;color:#6b7280">${p.position}${p.age?' · '+p.age+'y':''}</span></div><div class="pr-player-meta">Potential: ${pot}${p.nationality?' · '+p.nationality:''}</div>${allStats?`<div class="pr-top-stats" style="margin-top:8px">${allStats}</div>`:''}</div>`;
+      const allStats=p.stats?Object.entries(p.stats).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v])=>`<span class="pr-top-stat-chip">${esc(k)}: ${v}</span>`).join(''):'';
+      p3.innerHTML+=`<div class="pr-player-block"><div class="pr-player-name">${esc(p.name)} <span style="font-size:13px;font-weight:400;color:#6b7280">${esc(p.position)}${p.age?' · '+p.age+'y':''}</span></div><div class="pr-player-meta">Potential: ${pot}${p.nationality?' · '+esc(p.nationality):''}</div>${allStats?`<div class="pr-top-stats" style="margin-top:8px">${allStats}</div>`:''}</div>`;
     });
     pa.appendChild(p3);
   }
