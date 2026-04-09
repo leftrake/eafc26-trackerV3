@@ -27,7 +27,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden;background-image:radial-gradient(ellipse 90% 45% at 50% 0%,rgba(74,138,255,.07) 0%,transparent 65%)}
 
 /* Scrollbar */
 ::-webkit-scrollbar{width:3px}
@@ -42,7 +42,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .nav-links{display:flex;gap:6px;flex-wrap:wrap}
 .nav-link{padding:5px 12px;border-radius:7px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:11px;font-weight:500;cursor:pointer;text-decoration:none;transition:all .14s;font-family:'DM Sans',sans-serif}
 .nav-link:hover{background:var(--bg4);color:var(--text)}
-.nav-link.active{background:var(--bg4);color:var(--text)}
+.nav-link.active{background:linear-gradient(135deg,rgba(74,138,255,.12),var(--bg4));color:var(--text);border-color:rgba(74,138,255,.25)}
 
 /* ── Hero ── */
 .hero{padding:60px 24px 40px;text-align:center;position:relative;overflow:hidden}
@@ -51,7 +51,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .hero-title{font-family:'DM Serif Display',serif;font-size:clamp(36px,6vw,64px);color:var(--text);line-height:1.05;letter-spacing:-.5px;margin-bottom:10px}
 .hero-title em{font-style:italic;color:var(--gold)}
 .hero-sub{font-size:14px;color:var(--text2);max-width:400px;margin:0 auto 28px;line-height:1.7}
-.hero-stats{display:inline-flex;gap:0;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden}
+.hero-stats{display:inline-flex;gap:0;background:linear-gradient(160deg,var(--bg3),var(--bg2));border:1px solid var(--border2);border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.3)}
 .hero-stat{padding:12px 20px;text-align:center;border-right:1px solid var(--border)}
 .hero-stat:last-child{border-right:none}
 .hs-val{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:var(--gold)}
@@ -90,13 +90,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .tl-event.right{flex-direction:row}
 
 /* Dot on the spine */
-.tl-dot{flex-shrink:0;width:12px;height:12px;border-radius:50%;border:2px solid var(--bg);position:absolute;left:50%;transform:translateX(-50%);top:18px;z-index:3;transition:transform .15s}
-.tl-event:hover .tl-dot{transform:translateX(-50%) scale(1.4)}
+.tl-dot{flex-shrink:0;width:12px;height:12px;border-radius:50%;border:2px solid var(--bg);position:absolute;left:50%;transform:translateX(-50%);top:18px;z-index:3;transition:transform .2s,box-shadow .2s}
+.tl-event:hover .tl-dot{transform:translateX(-50%) scale(1.5);box-shadow:0 0 0 4px rgba(255,255,255,.07)}
 @media(max-width:640px){.tl-dot{left:20px}}
 
 /* Card body */
-.tl-card{width:calc(50% - 24px);background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;transition:border-color .14s,transform .14s;cursor:default}
-.tl-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.tl-card{width:calc(50% - 24px);background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;transition:border-color .2s,transform .2s,box-shadow .2s;cursor:default;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.tl-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.35)}
 .tl-event.left .tl-card{margin-right:24px}
 .tl-event.right .tl-card{margin-left:24px}
 @media(max-width:640px){
@@ -125,7 +125,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .dot-milestone{background:var(--purple)}
 
 /* Highlighted events (big wins, first MOTM etc) */
-.tl-card.highlight{border-color:rgba(232,197,109,.2);background:linear-gradient(135deg,var(--bg2),rgba(232,197,109,.04))}
+.tl-card.highlight{border-color:rgba(232,197,109,.25);background:linear-gradient(135deg,var(--bg2),rgba(232,197,109,.06));box-shadow:0 2px 12px rgba(232,197,109,.08)}
 .tl-card.highlight .tl-headline{color:var(--gold2)}
 
 /* Empty state */
