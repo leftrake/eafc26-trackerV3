@@ -205,10 +205,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div id="root"></div>
 </div>
 <div class="toast" id="toast"></div>
+<script src="shared.js"></script>
 <script>
 // ── Constants ─────────────────────────────────────────────────────────────────
-const PC={GK:'#f59e0b',CB:'#3b82f6',LB:'#3b82f6',RB:'#3b82f6',CDM:'#10b981',CM:'#10b981',CAM:'#10b981',LM:'#ef4444',RW:'#ef4444',LW:'#ef4444',ST:'#ef4444',CF:'#ef4444'};
-const AVC=['#3d7eff','#22c55e','#f59e0b','#ef4444','#a855f7','#ec4899','#14b8a6','#f97316'];
 const COMPS=['League','Cup','Champions League','Europa League','Conference League','Friendly','International'];
 const CC={'League':'#3d7eff','Cup':'#f59e0b','Champions League':'#f59e0b','Europa League':'#f97316','Conference League':'#22c55e','Friendly':'#6b7280','International':'#a855f7'};
 const FMT={
@@ -221,28 +220,19 @@ const FMT={
   '4-1-4-1':[{p:'GK',x:50,y:90},{p:'RB',x:80,y:74},{p:'CB',x:62,y:70},{p:'CB',x:38,y:70},{p:'LB',x:20,y:74},{p:'CDM',x:50,y:61},{p:'RM',x:82,y:45},{p:'CM',x:62,y:45},{p:'CM',x:38,y:45},{p:'LM',x:18,y:45},{p:'ST',x:50,y:21}],
   '3-4-3':[{p:'GK',x:50,y:90},{p:'CB',x:70,y:73},{p:'CB',x:50,y:71},{p:'CB',x:30,y:73},{p:'RM',x:83,y:54},{p:'CM',x:63,y:52},{p:'CM',x:37,y:52},{p:'LM',x:17,y:54},{p:'RW',x:76,y:27},{p:'ST',x:50,y:21},{p:'LW',x:24,y:27}],
 };
-const W={GK:{"Reactions":12,"GK Diving":22,"GK Handling":22,"GK Kicking":6,"GK Positioning":22,"GK Reflexes":22},CB:{"Heading Accuracy":11,"Short Passing":6,"Ball Control":5,"Acceleration":6,"Sprint Speed":3,"Jumping":4,"Strength":11,"Def Awareness":15,"Stand Tackle":18,"Slide Tackle":11,"Aggression":8,"Interceptions":14,"Reactions":6},LB:{"Crossing":10,"Finishing":5,"Heading Accuracy":5,"Short Passing":8,"Ball Control":8,"Acceleration":6,"Sprint Speed":8,"Reactions":6,"Stamina":9,"Def Awareness":9,"Stand Tackle":12,"Slide Tackle":15,"Interceptions":12},RB:{"Crossing":10,"Finishing":5,"Heading Accuracy":5,"Short Passing":8,"Ball Control":8,"Acceleration":6,"Sprint Speed":8,"Reactions":6,"Stamina":9,"Def Awareness":9,"Stand Tackle":12,"Slide Tackle":15,"Interceptions":12},CDM:{"Short Passing":15,"Ball Control":11,"Reactions":8,"Stamina":7,"Strength":5,"Def Awareness":10,"Stand Tackle":13,"Slide Tackle":6,"Aggression":6,"Interceptions":15,"Long Passing":11,"Vision":5},CM:{"Finishing":3,"Short Passing":18,"Dribbling":8,"Ball Control":15,"Reactions":9,"Stamina":7,"Long Shots":5,"Stand Tackle":6,"Interceptions":6,"Positioning":7,"Long Passing":14,"Vision":5},LM:{"Crossing":11,"Finishing":7,"Short Passing":12,"Dribbling":16,"Ball Control":14,"Acceleration":8,"Sprint Speed":7,"Reactions":8,"Stamina":6,"Interceptions":6,"Positioning":7,"Long Passing":6,"Vision":14},LW:{"Crossing":11,"Finishing":7,"Short Passing":12,"Dribbling":16,"Ball Control":14,"Acceleration":8,"Sprint Speed":7,"Reactions":8,"Stamina":6,"Interceptions":6,"Positioning":7,"Long Passing":6,"Vision":14},RW:{"Crossing":10,"Finishing":11,"Short Passing":10,"Dribbling":17,"Ball Control":15,"Acceleration":8,"Sprint Speed":7,"Agility":4,"Reactions":8,"Long Shots":5,"Positioning":10,"Vision":15},CAM:{"Finishing":8,"Short Passing":17,"Dribbling":14,"Ball Control":16,"Acceleration":5,"Sprint Speed":4,"Agility":4,"Reactions":8,"Long Shots":6,"Positioning":9,"Long Passing":5,"Vision":8},CF:{"Finishing":12,"Heading Accuracy":3,"Short Passing":10,"Dribbling":15,"Ball Control":16,"Acceleration":6,"Sprint Speed":6,"Reactions":10,"Shot Power":6,"Long Shots":5,"Positioning":14,"Vision":9},ST:{"Positioning":24.07,"Heading Accuracy":19.83,"Finishing":14.06,"Sprint Speed":12.27,"Reactions":8.89,"Acceleration":8.36,"Long Shots":4.45,"Dribbling":4.14,"Short Passing":3.52}};
 
 // ── Game Date ─────────────────────────────────────────────────────────────────
-function localISODate(d){const m=d.getMonth()+1,dy=d.getDate();return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(dy<10?'0':'')+dy;}
 const GAME_DATE=localStorage.getItem('eafc26_gamedate')||localISODate(new Date());
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function ini(n){return(n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
-function avc(n){let h=0;for(const c of n||'')h=(h+c.charCodeAt(0))%AVC.length;return AVC[h];}
-function getOVR(p){if(!p)return 0;if(p.manualOVR)return parseInt(p.manualOVR)||0;if(!p.stats||!p.position)return 0;const w=W[p.position];if(!w)return 0;const t=Object.values(w).reduce((a,b)=>a+b,0);return Math.round(Object.entries(w).reduce((s,[k,wi])=>s+(p.stats[k]||0)*wi/t,0));}
-function rcol(r){const v=parseFloat(r);if(!v)return'var(--text2)';if(v>=8)return'#22c55e';if(v>=7)return'#3d7eff';if(v>=6)return'#f59e0b';return'#ef4444';}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 function mk(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=String(txt);return e;}
 function css(e,s){Object.entries(s).forEach(([k,v])=>{try{e.style[k]=v;}catch(_){}});return e;}
 function app(parent,...kids){kids.forEach(k=>{if(k==null||k===false)return;parent.appendChild(k instanceof Node?k:document.createTextNode(String(k)));});return parent;}
 
 // ── Data ──────────────────────────────────────────────────────────────────────
-let SQUAD=[];
-let MATCHES=[];
-try{const d=JSON.parse(localStorage.getItem('eafc26v12')||'null');if(d?.players)SQUAD=d.players;}catch{}
-if(!SQUAD.length){['eafc26v11','eafc26v10','eafc26v9'].forEach(k=>{if(!SQUAD.length)try{const d=JSON.parse(localStorage.getItem(k)||'null');if(d?.players?.length)SQUAD=d.players;}catch{}});}
-try{const d=JSON.parse(localStorage.getItem('eafc26_matches')||'[]');MATCHES=Array.isArray(d)?d:[];}catch{MATCHES=[];}
+let SQUAD=loadSquad();
+let MATCHES=loadMatches();
 function saveM(){try{localStorage.setItem('eafc26_matches',JSON.stringify(MATCHES));}catch(e){if(e.name==='QuotaExceededError'||e.code===22)toast('Storage full — export your save!');}}
 function recomputeSquadStats(){
   // For every player, scan ALL matches and recompute their aggregate stats
@@ -633,7 +623,7 @@ function openModal(existingMatch){
 
   function buildBench(){
     const usedAll=new Set([...(draft.xi||[]).filter(Boolean).map(s=>s.playerId),...(draft.subs||[]).map(s=>s.playerId)]);
-    const avail=SQUAD.filter(p=>!usedAll.has(p.id)).sort((a,b)=>getOVR(b)-getOVR(a));
+    const avail=SQUAD.filter(p=>!usedAll.has(p.id)).sort((a,b)=>calcOVR(b)-calcOVR(a));
     const wrap=mk('div','bench-wrap');
     wrap.appendChild(mk('div','bench-lbl','Available — drag to pitch or tap when a slot is selected'));
     const row=mk('div','bench-scroll');
@@ -644,7 +634,7 @@ function openModal(existingMatch){
       const av=css(mk('div','',ini(p.name)),{width:'22px',height:'22px',borderRadius:'5px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'8px',fontWeight:'700',background:avc(p.name)+'33',color:avc(p.name),flexShrink:'0'});
       const pos=css(mk('span','',p.position||'?'),{fontSize:'9px',fontWeight:'700',color:pc2});
       const nm=css(mk('span','',p.name.split(' ').at(-1)||p.name),{fontSize:'11px',fontWeight:'600',color:'var(--text)'});
-      const ov=css(mk('span','',String(getOVR(p)||'—')),{fontSize:'10px',fontFamily:"'DM Mono',monospace",color:'var(--text3)'});
+      const ov=css(mk('span','',String(calcOVR(p)||'—')),{fontSize:'10px',fontFamily:"'DM Mono',monospace",color:'var(--text3)'});
       app(tile,av,pos,nm,ov);
       // Click: assign to active slot
       tile.onclick=()=>{
@@ -748,7 +738,7 @@ function openModal(existingMatch){
     function rebuild(){
       grid.innerHTML='';
       const q=pickerQ.toLowerCase();
-      let pls=[...SQUAD].sort((a,b)=>getOVR(b)-getOVR(a));
+      let pls=[...SQUAD].sort((a,b)=>calcOVR(b)-calcOVR(a));
       if(q)pls=pls.filter(p=>(p.name||'').toLowerCase().includes(q));
       if(!pls.length){grid.appendChild(css(mk('div','','No players found'),{color:'var(--text3)',fontSize:'13px',padding:'16px',textAlign:'center',gridColumn:'1/-1'}));return;}
       pls.forEach(p=>{
@@ -759,7 +749,7 @@ function openModal(existingMatch){
         const info=mk('div');css(info,{flex:'1',minWidth:'0'});
         info.appendChild(css(mk('div','pr-nm',p.name||'?'),{}));
         info.appendChild(mk('div','pr-pos',p.position||'—'));
-        const ov=mk('div','pr-ovr',String(getOVR(p)||'—'));
+        const ov=mk('div','pr-ovr',String(calcOVR(p)||'—'));
         app(row,av,info,ov);
         row.onclick=()=>{
           if(isSub){draft.subs.push({playerId:p.id});activeSlot=null;}
