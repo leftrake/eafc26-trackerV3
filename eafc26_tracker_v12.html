@@ -398,6 +398,8 @@ document.getElementById('importFile').addEventListener('change',e=>{if(e.target.
 // ─── STATE ────────────────────────────────────────────────────────────────────
 const DB='eafc26v12';
 const DB_TR='eafc26_transfers';
+function localISODate(d){const m=d.getMonth()+1,dy=d.getDate();return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(dy<10?'0':'')+dy;}
+const GAME_DATE=localStorage.getItem('eafc26_gamedate')||localISODate(new Date());
 let S={tab:'first',view:'list',layout:'list',players:[],sel:null,modal:null,search:'',fPos:'',sort:'ovr',cmpMode:false,cmpSel:[],editLogIdx:null};
 let TRANSFERS=[];
 try{const d=JSON.parse(localStorage.getItem(DB)||'null');if(d&&d.players)S.players=d.players;}catch{}
@@ -1386,7 +1388,7 @@ function buildDrawer(){
   const existingLog=(isEditLog&&S.editLogIdx!=null)?(orig.history||[])[S.editLogIdx]||{}:{};
 
   const stats={...(orig.stats||{})};
-  const f={squad:orig.squad||(S.tab==='first'?'first':'academy'),name:orig.name||'',position:orig.position||'ST',age:orig.age||'',nationality:orig.nationality||'',heightFt:orig.heightCm?String(Math.floor(orig.heightCm/30.48)):'',heightIn:orig.heightCm?String(Math.round((orig.heightCm/2.54)%12)):'',weightLbs:orig.weightLbs||'',foot:orig.foot||'Right',weakfoot:orig.weakfoot||3,skillmoves:orig.skillmoves||2,potLow:orig.potLow||70,potHigh:orig.potHigh||80,wage:orig.wage||'',value:orig.value||'',contractEnd:orig.contractEnd||'',kitNumber:orig.kitNumber||'',status:orig.status||'Fit',onLoan:orig.onLoan||false,loanClub:orig.loanClub||'',loanEnd:orig.loanEnd||'',loanWage:orig.loanWage||'',manualOVR:orig.manualOVR||'',useManualOVR:!!orig.manualOVR,playstyles:[...(orig.playstyles||[])],stats,notes:orig.notes||'',logDate:new Date().toISOString().slice(0,10),logNote:'',quickStatus:orig.status||'Fit',quickVal:'',quickNote:''};
+  const f={squad:orig.squad||(S.tab==='first'?'first':'academy'),name:orig.name||'',position:orig.position||'ST',age:orig.age||'',nationality:orig.nationality||'',heightFt:orig.heightCm?String(Math.floor(orig.heightCm/30.48)):'',heightIn:orig.heightCm?String(Math.round((orig.heightCm/2.54)%12)):'',weightLbs:orig.weightLbs||'',foot:orig.foot||'Right',weakfoot:orig.weakfoot||3,skillmoves:orig.skillmoves||2,potLow:orig.potLow||70,potHigh:orig.potHigh||80,wage:orig.wage||'',value:orig.value||'',contractEnd:orig.contractEnd||'',kitNumber:orig.kitNumber||'',status:orig.status||'Fit',onLoan:orig.onLoan||false,loanClub:orig.loanClub||'',loanEnd:orig.loanEnd||'',loanWage:orig.loanWage||'',manualOVR:orig.manualOVR||'',useManualOVR:!!orig.manualOVR,playstyles:[...(orig.playstyles||[])],stats,notes:orig.notes||'',logDate:GAME_DATE,logNote:'',quickStatus:orig.status||'Fit',quickVal:'',quickNote:''};
   function getHCm(){const ft=parseInt(f.heightFt)||0,inch=parseInt(f.heightIn)||0;return(ft||inch)?Math.round((ft*12+inch)*2.54):'';}
   const close=()=>{S.modal=null;S.editLogIdx=null;R();};
   const overlay=d('overlay',[]);const drawer=d('drawer',[]);
@@ -1402,7 +1404,7 @@ function buildDrawer(){
       position:isTransferOut?(orig.position||'ST'):'ST',
       fee:'',
       club:'',
-      date:new Date().toISOString().slice(0,10),
+      date:GAME_DATE,
       season:'',
       // Squad creation fields (Transfer In only)
       age:'',
@@ -1517,7 +1519,7 @@ function buildDrawer(){
   // ── EDIT PROGRESS LOG ENTRY ──
   if(isEditLog){
     const el2={
-      date:existingLog.date||new Date().toISOString().slice(0,10),
+      date:existingLog.date||GAME_DATE,
       note:existingLog.note||'',
       upgrades:[...(existingLog.upgrades||[])]
     };
@@ -1629,7 +1631,7 @@ function buildDrawer(){
       const p=S.players.find(x=>x.id===S.sel);if(!p)return;
       p.status=f.quickStatus;if(f.quickVal)p.value=parseInt(f.quickVal)||p.value;
       if(!p.history)p.history=[];
-      p.history.push({date:new Date().toISOString().slice(0,10),ovr:calcOVR(p),potLow:p.potLow||null,potHigh:p.potHigh||null,value:p.value||null,note:f.quickNote||'Quick update',upgrades:[]});
+      p.history.push({date:GAME_DATE,ovr:calcOVR(p),potLow:p.potLow||null,potHigh:p.potHigh||null,value:p.value||null,note:f.quickNote||'Quick update',upgrades:[]});
       save();S.modal=null;R();
     })]));
     overlay.appendChild(drawer);return overlay;

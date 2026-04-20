@@ -223,6 +223,10 @@ const FMT={
 };
 const W={GK:{"Reactions":12,"GK Diving":22,"GK Handling":22,"GK Kicking":6,"GK Positioning":22,"GK Reflexes":22},CB:{"Heading Accuracy":11,"Short Passing":6,"Ball Control":5,"Acceleration":6,"Sprint Speed":3,"Jumping":4,"Strength":11,"Def Awareness":15,"Stand Tackle":18,"Slide Tackle":11,"Aggression":8,"Interceptions":14,"Reactions":6},LB:{"Crossing":10,"Finishing":5,"Heading Accuracy":5,"Short Passing":8,"Ball Control":8,"Acceleration":6,"Sprint Speed":8,"Reactions":6,"Stamina":9,"Def Awareness":9,"Stand Tackle":12,"Slide Tackle":15,"Interceptions":12},RB:{"Crossing":10,"Finishing":5,"Heading Accuracy":5,"Short Passing":8,"Ball Control":8,"Acceleration":6,"Sprint Speed":8,"Reactions":6,"Stamina":9,"Def Awareness":9,"Stand Tackle":12,"Slide Tackle":15,"Interceptions":12},CDM:{"Short Passing":15,"Ball Control":11,"Reactions":8,"Stamina":7,"Strength":5,"Def Awareness":10,"Stand Tackle":13,"Slide Tackle":6,"Aggression":6,"Interceptions":15,"Long Passing":11,"Vision":5},CM:{"Finishing":3,"Short Passing":18,"Dribbling":8,"Ball Control":15,"Reactions":9,"Stamina":7,"Long Shots":5,"Stand Tackle":6,"Interceptions":6,"Positioning":7,"Long Passing":14,"Vision":5},LM:{"Crossing":11,"Finishing":7,"Short Passing":12,"Dribbling":16,"Ball Control":14,"Acceleration":8,"Sprint Speed":7,"Reactions":8,"Stamina":6,"Interceptions":6,"Positioning":7,"Long Passing":6,"Vision":14},LW:{"Crossing":11,"Finishing":7,"Short Passing":12,"Dribbling":16,"Ball Control":14,"Acceleration":8,"Sprint Speed":7,"Reactions":8,"Stamina":6,"Interceptions":6,"Positioning":7,"Long Passing":6,"Vision":14},RW:{"Crossing":10,"Finishing":11,"Short Passing":10,"Dribbling":17,"Ball Control":15,"Acceleration":8,"Sprint Speed":7,"Agility":4,"Reactions":8,"Long Shots":5,"Positioning":10,"Vision":15},CAM:{"Finishing":8,"Short Passing":17,"Dribbling":14,"Ball Control":16,"Acceleration":5,"Sprint Speed":4,"Agility":4,"Reactions":8,"Long Shots":6,"Positioning":9,"Long Passing":5,"Vision":8},CF:{"Finishing":12,"Heading Accuracy":3,"Short Passing":10,"Dribbling":15,"Ball Control":16,"Acceleration":6,"Sprint Speed":6,"Reactions":10,"Shot Power":6,"Long Shots":5,"Positioning":14,"Vision":9},ST:{"Positioning":24.07,"Heading Accuracy":19.83,"Finishing":14.06,"Sprint Speed":12.27,"Reactions":8.89,"Acceleration":8.36,"Long Shots":4.45,"Dribbling":4.14,"Short Passing":3.52}};
 
+// ── Game Date ─────────────────────────────────────────────────────────────────
+function localISODate(d){const m=d.getMonth()+1,dy=d.getDate();return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(dy<10?'0':'')+dy;}
+const GAME_DATE=localStorage.getItem('eafc26_gamedate')||localISODate(new Date());
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function ini(n){return(n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
 function avc(n){let h=0;for(const c of n||'')h=(h+c.charCodeAt(0))%AVC.length;return AVC[h];}
@@ -504,7 +508,7 @@ function openModal(existingMatch){
   const isEditing=!!existingMatch;
   const draft=isEditing
     ?JSON.parse(JSON.stringify(existingMatch))
-    :{id:Date.now().toString(),date:new Date().toISOString().slice(0,10),competition:'League',venue:'Home',opponent:'',goalsFor:0,goalsAgainst:0,formation:'4-3-3',xi:Array(11).fill(null),subs:[],playerStats:{},notes:''};
+    :{id:Date.now().toString(),date:GAME_DATE,competition:'League',venue:'Home',opponent:'',goalsFor:0,goalsAgainst:0,formation:'4-3-3',xi:Array(11).fill(null),subs:[],playerStats:{},notes:''};
   let step=1,activeSlot=null,pickerQ='',dragSrc=null;
   const overlay=css(mk('div','overlay'),{});
   overlay.onclick=e=>{if(e.target===overlay)overlay.remove();};
