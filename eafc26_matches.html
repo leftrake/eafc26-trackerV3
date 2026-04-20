@@ -839,6 +839,43 @@ function fgTA(label,ph,val,cb){
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 R();
+
+// ── Keyboard Shortcuts ────────────────────────────────────────────────────────
+(function(){
+  let helpOpen=false;
+  const SHORTCUTS=[
+    ['N','Log new match (list view)'],
+    ['Esc','Close modal / go back to list'],
+    ['?','Show this help']
+  ];
+  function showHelp(){
+    if(helpOpen)return;helpOpen=true;
+    const el=document.createElement('div');el.id='kb-help';
+    el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)';
+    const box=document.createElement('div');
+    box.style.cssText='background:#181c24;border:1px solid rgba(255,255,255,.13);border-radius:14px;padding:22px 26px;min-width:280px;max-width:400px;box-shadow:0 24px 80px rgba(0,0,0,.6)';
+    box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font-size:14px;font-weight:700">Keyboard Shortcuts</span><span style="font-size:11px;color:#4a5062;cursor:pointer" id="kb-x">✕ close</span></div>'+
+      SHORTCUTS.map(([k,d])=>`<div style="display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)"><kbd style="font-family:'DM Mono',monospace;font-size:11px;padding:2px 8px;border-radius:5px;background:#1f2430;border:1px solid rgba(255,255,255,.15);color:#dde1ec;min-width:38px;text-align:center;white-space:nowrap">${k}</kbd><span style="font-size:12px;color:#7c8494">${d}</span></div>`).join('');
+    el.appendChild(box);
+    el.onclick=e=>{if(e.target===el||e.target.id==='kb-x')hideHelp();};
+    document.body.appendChild(el);
+  }
+  function hideHelp(){const el=document.getElementById('kb-help');if(el)el.remove();helpOpen=false;}
+  document.addEventListener('keydown',e=>{
+    const tag=document.activeElement?.tagName;
+    const inInput=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT';
+    if(e.key==='Escape'){
+      if(helpOpen){hideHelp();return;}
+      const ov=document.querySelector('.overlay');
+      if(ov){ov.remove();return;}
+      if(VIEW==='detail'){VIEW='list';R();}
+      return;
+    }
+    if(inInput)return;
+    if(e.key==='?'){e.preventDefault();helpOpen?hideHelp():showHelp();return;}
+    if((e.key==='n'||e.key==='N')&&!document.querySelector('.overlay')&&VIEW==='list'){openModal();return;}
+  });
+})();
 </script>
 </body>
 </html>

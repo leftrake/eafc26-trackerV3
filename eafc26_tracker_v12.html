@@ -1713,6 +1713,54 @@ function fg(l,kids){return h('div',{class:'fg'},[h('label',{},[l]),...kids]);}
 function statInp(label,val,cb){return d('stat-inp',[h('label',{},[label.replace('Att. Positioning','Att. Pos').replace('Heading Accuracy','Heading Acc').replace('Def. Awareness','Def. Aware')]),h('input',{type:'number',min:1,max:99,value:val,placeholder:'—',onInput:e=>cb(e.target.value)})]);}
 
 R();
+
+// ─── KEYBOARD SHORTCUTS ───────────────────────────────────────────────────────
+(function(){
+  let helpOpen=false;
+  const SHORTCUTS=[
+    ['/','Focus search'],['A','Add new player'],['C','Toggle compare mode'],
+    ['1','First Team tab'],['2','Academy tab'],['E','Edit player (detail view)'],
+    ['Esc','Close modal / go back / exit compare'],['?','Show this help']
+  ];
+  function showHelp(){
+    if(helpOpen)return;helpOpen=true;
+    const el=document.createElement('div');el.id='kb-help';
+    el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)';
+    const box=document.createElement('div');
+    box.style.cssText='background:#181c24;border:1px solid rgba(255,255,255,.13);border-radius:14px;padding:22px 26px;min-width:300px;max-width:420px;box-shadow:0 24px 80px rgba(0,0,0,.6)';
+    box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font-size:14px;font-weight:700">Keyboard Shortcuts</span><span style="font-size:11px;color:#4a5062;cursor:pointer" id="kb-x">✕ close</span></div>'+
+      SHORTCUTS.map(([k,d])=>`<div style="display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)"><kbd style="font-family:'DM Mono',monospace;font-size:11px;padding:2px 8px;border-radius:5px;background:#1f2430;border:1px solid rgba(255,255,255,.15);color:#dde1ec;min-width:38px;text-align:center;white-space:nowrap">${k}</kbd><span style="font-size:12px;color:#7c8494">${d}</span></div>`).join('');
+    el.appendChild(box);
+    el.onclick=e=>{if(e.target===el||e.target.id==='kb-x')hideHelp();};
+    document.body.appendChild(el);
+  }
+  function hideHelp(){const el=document.getElementById('kb-help');if(el)el.remove();helpOpen=false;}
+  document.addEventListener('keydown',e=>{
+    const tag=document.activeElement?.tagName;
+    const inInput=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT';
+    if(e.key==='Escape'){
+      e.preventDefault();
+      if(helpOpen){hideHelp();return;}
+      if(S.modal){S.modal=null;R();return;}
+      if(S.view!=='list'){S.view='list';R();return;}
+      if(S.cmpMode){S.cmpMode=false;S.cmpSel=[];R();return;}
+      return;
+    }
+    if(inInput)return;
+    if(e.key==='?'){e.preventDefault();helpOpen?hideHelp():showHelp();return;}
+    if(e.key==='/'||e.key==='f'){e.preventDefault();document.querySelector('.filters input')?.focus();return;}
+    if(e.key==='1'&&!S.modal){S.tab='first';S.view='list';S.cmpMode=false;S.cmpSel=[];R();return;}
+    if(e.key==='2'&&!S.modal){S.tab='academy';S.view='list';S.cmpMode=false;S.cmpSel=[];R();return;}
+    if(S.view==='list'&&!S.modal){
+      if(e.key==='a'||e.key==='A'){S.modal='add';R();return;}
+      if(e.key==='c'||e.key==='C'){S.cmpMode=!S.cmpMode;S.cmpSel=[];R();return;}
+    }
+    if(S.view==='detail'&&!S.modal){
+      if(e.key==='e'||e.key==='E'){S.modal='edit';R();return;}
+      if(e.key==='Backspace'){e.preventDefault();S.view='list';R();return;}
+    }
+  });
+})();
 </script>
 </body>
 </html>
