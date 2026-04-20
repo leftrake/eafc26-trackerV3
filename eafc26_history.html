@@ -149,6 +149,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .form-dot.D{background:rgba(251,191,36,.15);color:var(--amber);border:1px solid rgba(251,191,36,.25)}
 .form-dot.L{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.25)}
 
+/* OVR Progression chart */
+.ovr-section{max-width:900px;margin:0 auto 4px;padding:0 24px}
+.ovr-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 20px}
+.ovr-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap}
+.ovr-card-title{font-family:'DM Serif Display',serif;font-size:15px;color:var(--text)}
+.ovr-toggle-row{display:flex;gap:6px;flex-wrap:wrap}
+.ovr-toggle{background:var(--bg3);border:1px solid var(--border2);border-radius:20px;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;padding:3px 10px;cursor:pointer;transition:all .15s;letter-spacing:.3px}
+.ovr-toggle.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.ovr-svg-wrap{width:100%;overflow:visible;position:relative}
+.ovr-svg{width:100%;height:auto;display:block}
+.ovr-tooltip{position:absolute;background:var(--bg4);border:1px solid var(--border2);border-radius:8px;padding:7px 11px;font-size:11px;pointer-events:none;white-space:nowrap;z-index:20;opacity:0;transition:opacity .12s;line-height:1.5}
+.ovr-tooltip .tt-name{font-weight:600;color:var(--text);margin-bottom:2px}
+.ovr-tooltip .tt-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:700}
+.ovr-tooltip .tt-date{color:var(--text3);font-size:10px}
+.ovr-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.ovr-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;opacity:.85;transition:opacity .15s;padding:2px 0}
+.ovr-leg-item:hover{opacity:1}
+.ovr-leg-item.muted{opacity:.25}
+.ovr-leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ovr-leg-name{color:var(--text2);white-space:nowrap}
+
 /* Search + filter */
 .tl-search{background:var(--bg3);border:1px solid var(--border2);border-radius:20px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 14px;outline:none;width:180px;transition:border-color .15s}
 .tl-search:focus{border-color:var(--blue);width:220px}
@@ -208,6 +229,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- Snapshot section -->
 <div class="snapshot" id="snapshot"></div>
+
+<!-- OVR Progression chart -->
+<div class="ovr-section" id="ovrSection" style="display:none"></div>
 
 <!-- Filter bar -->
 <div class="filter-bar">
@@ -470,6 +494,188 @@ function buildEvents(){
 
 }
 
+// ── OVR Progression Chart ─────────────────────────────────────────────────────
+function buildOVRChart(){
+  const section=document.getElementById('ovrSection');
+  if(!section)return;
+
+  // Only players with ≥2 history entries
+  const players=SQUAD.filter(p=>p.history&&p.history.length>=2)
+    .map(p=>({p,hist:[...p.history].sort((a,b)=>a.date.localeCompare(b.date))}))
+    .sort((a,b)=>ovr(b.p)-ovr(a.p));
+
+  if(!players.length){section.style.display='none';return;}
+  section.style.display='';
+
+  // Assign colors
+  const COLORS=['#4a8aff','#34d399','#fbbf24','#f87171','#c084fc','#2dd4bf','#f97316','#ec4899','#a3e635','#38bdf8'];
+  players.forEach((item,i)=>{item.color=COLORS[i%COLORS.length];});
+
+  // Muted set (toggled players)
+  const muted=new Set();
+
+  // All dates across all players — build a shared x-axis
+  const allDates=[...new Set(players.flatMap(({hist})=>hist.map(h=>h.date)))].sort();
+  if(allDates.length<2){section.style.display='none';return;}
+
+  // Chart config
+  const W=600,H=180,PAD={t:12,r:16,b:30,l:36};
+  const cW=W-PAD.l-PAD.r, cH=H-PAD.t-PAD.b;
+  const ns='http://www.w3.org/2000/svg';
+  function svgEl(tag,attrs,text){
+    const e=document.createElementNS(ns,tag);
+    Object.entries(attrs||{}).forEach(([k,v])=>e.setAttribute(k,v));
+    if(text!=null)e.textContent=text;
+    return e;
+  }
+
+  // OVR range across all players
+  const allOVRs=players.flatMap(({hist})=>hist.map(h=>h.ovr||0)).filter(Boolean);
+  const minO=Math.max(0,Math.min(...allOVRs)-4);
+  const maxO=Math.min(99,Math.max(...allOVRs)+4);
+
+  const xPos=d=>{const i=allDates.indexOf(d);return PAD.l+(i/(allDates.length-1))*cW;};
+  const yPos=v=>PAD.t+cH-(((v-minO)/(maxO-minO))*cH);
+
+  function buildSVG(){
+    const svg=document.createElementNS(ns,'svg');
+    svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+    svg.setAttribute('class','ovr-svg');
+    svg.setAttribute('id','ovrSvg');
+
+    // Grid + y-axis labels
+    [0,.25,.5,.75,1].forEach(t=>{
+      const y=PAD.t+cH*t;
+      svg.appendChild(svgEl('line',{x1:PAD.l,y1:y,x2:W-PAD.r,y2:y,stroke:'rgba(255,255,255,.05)',strokeWidth:'1'}));
+      const lbl=Math.round(maxO-(t*(maxO-minO)));
+      svg.appendChild(svgEl('text',{x:PAD.l-5,y:y+4,'text-anchor':'end','font-size':'9',fill:'rgba(255,255,255,.3)','font-family':"'DM Mono',monospace"},lbl));
+    });
+
+    // X-axis date labels (first, mid, last)
+    const fmtX=d=>{const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'});};
+    [[0,'start'],[Math.floor((allDates.length-1)/2),'middle'],[allDates.length-1,'end']].forEach(([i,anchor])=>{
+      const x=PAD.l+(i/(allDates.length-1))*cW;
+      svg.appendChild(svgEl('text',{x,y:H-6,'text-anchor':anchor,'font-size':'9',fill:'rgba(255,255,255,.3)','font-family':"'DM Mono',monospace"},fmtX(allDates[i])));
+    });
+
+    // Lines + dots per player
+    const hitTargets=[];
+    players.forEach(({p,hist,color})=>{
+      const isMuted=muted.has(p.id);
+      const pts=hist.filter(h=>h.ovr).map(h=>({x:xPos(h.date),y:yPos(h.ovr),d:h.date,v:h.ovr}));
+      if(pts.length<2)return;
+      const lineD=pts.map((pt,i)=>(i===0?`M${pt.x},${pt.y}`:`L${pt.x},${pt.y}`)).join(' ');
+      const linePath=svgEl('path',{d:lineD,fill:'none',stroke:isMuted?'rgba(255,255,255,.06)':color,strokeWidth:isMuted?'1':'2',strokeLinejoin:'round',strokeLinecap:'round','stroke-dasharray':isMuted?'4 3':''});
+      svg.appendChild(linePath);
+      pts.forEach(pt=>{
+        const dot=svgEl('circle',{cx:pt.x,cy:pt.y,r:'3',fill:isMuted?'rgba(255,255,255,.08)':color,stroke:'var(--bg2)',strokeWidth:'1.5',style:'cursor:crosshair'});
+        svg.appendChild(dot);
+        if(!isMuted)hitTargets.push({el:dot,name:p.name,v:pt.v,d:pt.d,color,x:pt.x});
+      });
+    });
+
+    // Invisible wider hit-area circles for hover
+    hitTargets.forEach(({el,name,v,d,color,x})=>{
+      const hit=svgEl('circle',{cx:el.getAttribute('cx'),cy:el.getAttribute('cy'),r:'8',fill:'transparent',style:'cursor:crosshair'});
+      hit.addEventListener('mouseenter',e=>{
+        const wrap=document.getElementById('ovrWrap');
+        const tt=wrap&&wrap.querySelector('.ovr-tooltip');
+        if(!tt)return;
+        tt.querySelector('.tt-name').style.color=color;
+        tt.querySelector('.tt-name').textContent=name;
+        tt.querySelector('.tt-val').style.color=color;
+        tt.querySelector('.tt-val').textContent=v+' OVR';
+        tt.querySelector('.tt-date').textContent=fmtShort(d);
+        const svgRect=svg.getBoundingClientRect();
+        const wrapRect=wrap.getBoundingClientRect();
+        const px=(parseFloat(el.getAttribute('cx'))/W)*svgRect.width+svgRect.left-wrapRect.left;
+        const py=(parseFloat(el.getAttribute('cy'))/H)*svgRect.height+svgRect.top-wrapRect.top;
+        tt.style.left=(px+10)+'px';tt.style.top=(py-36)+'px';tt.style.opacity='1';
+      });
+      hit.addEventListener('mouseleave',()=>{
+        const wrap=document.getElementById('ovrWrap');
+        const tt=wrap&&wrap.querySelector('.ovr-tooltip');
+        if(tt)tt.style.opacity='0';
+      });
+      svg.appendChild(hit);
+    });
+
+    return svg;
+  }
+
+  function render(){
+    const card=section.querySelector('.ovr-card')||document.createElement('div');
+    card.className='ovr-card';card.innerHTML='';
+
+    // Header
+    const header=document.createElement('div');header.className='ovr-card-header';
+    const title=document.createElement('div');title.className='ovr-card-title';title.textContent='Squad OVR Progression';
+    header.appendChild(title);
+
+    // Toggle buttons (show all / top 5 / top 10)
+    const toggleRow=document.createElement('div');toggleRow.className='ovr-toggle-row';
+    ['All','Top 5','Top 10'].forEach(label=>{
+      const btn=document.createElement('button');btn.className='ovr-toggle';btn.textContent=label;
+      if(label==='All')btn.classList.add('on');
+      btn.addEventListener('click',()=>{
+        toggleRow.querySelectorAll('.ovr-toggle').forEach(b=>b.classList.remove('on'));
+        btn.classList.add('on');
+        const n=label==='All'?Infinity:parseInt(label.split(' ')[1]);
+        players.forEach((item,i)=>{
+          if(i<n)muted.delete(item.p.id);else muted.add(item.p.id);
+        });
+        const svgWrap=document.getElementById('ovrWrap');
+        if(svgWrap){
+          const old=svgWrap.querySelector('.ovr-svg');if(old)old.remove();
+          svgWrap.insertBefore(buildSVG(),svgWrap.querySelector('.ovr-tooltip'));
+          buildLegend(legend);
+        }
+      });
+      toggleRow.appendChild(btn);
+    });
+    header.appendChild(toggleRow);
+    card.appendChild(header);
+
+    // SVG wrap
+    const svgWrap=document.createElement('div');
+    svgWrap.className='ovr-svg-wrap';svgWrap.id='ovrWrap';svgWrap.style.position='relative';
+    svgWrap.appendChild(buildSVG());
+    const tooltip=document.createElement('div');tooltip.className='ovr-tooltip';
+    tooltip.innerHTML='<div class="tt-name"></div><div class="tt-val"></div><div class="tt-date"></div>';
+    svgWrap.appendChild(tooltip);
+    card.appendChild(svgWrap);
+
+    // Legend
+    const legend=document.createElement('div');legend.className='ovr-legend';
+    buildLegend(legend);
+    card.appendChild(legend);
+
+    section.innerHTML='';section.appendChild(card);
+  }
+
+  function buildLegend(legend){
+    legend.innerHTML='';
+    players.forEach(({p,color})=>{
+      const item=document.createElement('div');item.className='ovr-leg-item'+(muted.has(p.id)?' muted':'');
+      const dot=document.createElement('div');dot.className='ovr-leg-dot';dot.style.background=color;
+      const name=document.createElement('span');name.className='ovr-leg-name';name.textContent=p.name+(p.position?' · '+p.position:'');
+      item.appendChild(dot);item.appendChild(name);
+      item.addEventListener('click',()=>{
+        if(muted.has(p.id))muted.delete(p.id);else muted.add(p.id);
+        const svgWrap=document.getElementById('ovrWrap');
+        if(svgWrap){
+          const old=svgWrap.querySelector('.ovr-svg');if(old)old.remove();
+          svgWrap.insertBefore(buildSVG(),svgWrap.querySelector('.ovr-tooltip'));
+        }
+        item.classList.toggle('muted',muted.has(p.id));
+      });
+      legend.appendChild(item);
+    });
+  }
+
+  render();
+}
+
 // ── Stats + Snapshot ──────────────────────────────────────────────────────────
 function computeStats(){
   const sorted=[...MATCHES].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
@@ -711,6 +917,7 @@ if(!SQUAD.length&&!MATCHES.length&&!TRANSFERS.length){
   document.getElementById('timeline').innerHTML='<div class="tl-empty"><div class="tl-empty-icon">📜</div><div class="tl-empty-title">Your story begins now</div><div class="tl-empty-sub">Head to the Squad Tracker and start logging matches, transfers, and player upgrades.<br>Everything gets compiled here automatically.</div></div>';
 } else {
   buildEvents();
+  buildOVRChart();
   computeStats();
   updateChipCounts();
   renderTimeline();
