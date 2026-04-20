@@ -181,11 +181,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <div class="toast" id="toast"></div>
 
+<script src="shared.js"></script>
 <script>
 // ── Constants ─────────────────────────────────────────────────────────────────
 const COMPS=['League','Cup','Champions League','Europa League','Conference League','Friendly','International'];
 const FMTS=['4-3-3','4-2-3-1','4-4-2','3-5-2','4-3-2-1','5-3-2','4-1-4-1','3-4-3'];
-const PC={GK:'#f59e0b',CB:'#3b82f6',LB:'#3b82f6',RB:'#3b82f6',CDM:'#10b981',CM:'#10b981',CAM:'#10b981',LM:'#ef4444',RW:'#ef4444',LW:'#ef4444',ST:'#ef4444',CF:'#ef4444'};
 const EVENT_TYPES=[
   {key:'match',   label:'Match',    icon:'⚽', color:'#3d7eff'},
   {key:'training',label:'Training', icon:'🏃', color:'#f59e0b'},
