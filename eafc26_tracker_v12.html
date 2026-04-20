@@ -429,24 +429,31 @@ const sp=(cls,t,sty)=>h('span',{class:cls||'',...(sty?{style:sty}:{})},[t]);
 const bSel=(opts,cur,cb)=>h('select',{onChange:e=>cb(e.target.value)},opts.map(([v,l])=>h('option',{value:v,...(String(v)===String(cur)?{selected:true}:{})},[l||v])));
 
 // ─── PLAYER CARDS ─────────────────────────────────────────────────────────────
+// EA FC face-stat group weights — weighted avg of only entered (>0) sub-stats
 function calcCardStats(p){
   const s=p.stats||{};
-  const avg=(...keys)=>{const v=keys.map(k=>parseInt(s[k])||0).filter(x=>x>0);return v.length?Math.round(v.reduce((a,b)=>a+b)/v.length):0;};
+  const g=k=>parseInt(s[k])||0;
+  // weighted average; skips sub-stats that haven't been entered (value 0)
+  const w=(...pairs)=>{
+    let num=0,den=0;
+    for(let i=0;i<pairs.length;i+=2){const v=g(pairs[i+1]);if(v){num+=pairs[i]*v;den+=pairs[i];}}
+    return den?Math.round(num/den):0;
+  };
   if(p.position==='GK')return[
-    {k:'DIV',v:parseInt(s['GK Diving'])||0},
-    {k:'HAN',v:parseInt(s['GK Handling'])||0},
-    {k:'KIC',v:parseInt(s['GK Kicking'])||0},
-    {k:'REF',v:parseInt(s['GK Reflexes'])||0},
-    {k:'SPD',v:avg('Acceleration','Sprint Speed')},
-    {k:'POS',v:parseInt(s['GK Positioning'])||0}
+    {k:'DIV',v:g('GK Diving')},
+    {k:'HAN',v:g('GK Handling')},
+    {k:'KIC',v:g('GK Kicking')},
+    {k:'REF',v:g('GK Reflexes')},
+    {k:'SPD',v:w(55,'Acceleration',45,'Sprint Speed')},
+    {k:'POS',v:g('GK Positioning')}
   ];
   return[
-    {k:'PAC',v:avg('Acceleration','Sprint Speed')},
-    {k:'SHO',v:avg('Positioning','Finishing','Shot Power','Long Shots','Volleys','Penalties')},
-    {k:'PAS',v:avg('Vision','Crossing','FK Accuracy','Short Passing','Long Passing','Curve')},
-    {k:'DRI',v:avg('Agility','Balance','Reactions','Ball Control','Dribbling','Composure')},
-    {k:'DEF',v:avg('Interceptions','Heading Accuracy','Def Awareness','Stand Tackle','Slide Tackle')},
-    {k:'PHY',v:avg('Jumping','Stamina','Strength','Aggression')}
+    {k:'PAC',v:w(55,'Acceleration',        45,'Sprint Speed')},
+    {k:'SHO',v:w(45,'Finishing',           15,'Positioning',    15,'Shot Power',15,'Long Shots',5,'Volleys',5,'Penalties')},
+    {k:'PAS',v:w(35,'Short Passing',       20,'Vision',         20,'Crossing',  15,'Long Passing',5,'Curve',5,'FK Accuracy')},
+    {k:'DRI',v:w(50,'Dribbling',           30,'Ball Control',   20,'Agility')},
+    {k:'DEF',v:w(30,'Stand Tackle',        30,'Slide Tackle',   20,'Def Awareness',10,'Interceptions',10,'Heading Accuracy')},
+    {k:'PHY',v:w(50,'Strength',            25,'Stamina',        20,'Jumping',   5,'Aggression')}
   ];
 }
 function hexChart(stats){
