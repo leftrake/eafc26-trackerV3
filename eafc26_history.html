@@ -128,6 +128,40 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .tl-card.highlight{border-color:rgba(232,197,109,.25);background:linear-gradient(135deg,var(--bg2),rgba(232,197,109,.06));box-shadow:0 2px 12px rgba(232,197,109,.08)}
 .tl-card.highlight .tl-headline{color:var(--gold2)}
 
+/* Snapshot / top performers */
+.snapshot{max-width:900px;margin:0 auto 4px;padding:0 24px}
+.snap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:16px}
+.snap-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;transition:border-color .18s}
+.snap-card:hover{border-color:var(--border2)}
+.snap-av{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.snap-av.icon{font-size:18px;background:var(--bg3)}
+.snap-info{min-width:0}
+.snap-val{font-size:18px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
+.snap-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.snap-lbl{font-size:9px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);margin-top:3px}
+
+/* Form strip */
+.form-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px}
+.form-label{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);white-space:nowrap}
+.form-dots{display:flex;gap:5px;flex-wrap:wrap}
+.form-dot{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;letter-spacing:0;flex-shrink:0}
+.form-dot.W{background:rgba(52,211,153,.2);color:var(--green);border:1px solid rgba(52,211,153,.3)}
+.form-dot.D{background:rgba(251,191,36,.15);color:var(--amber);border:1px solid rgba(251,191,36,.25)}
+.form-dot.L{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.25)}
+
+/* Search + filter */
+.tl-search{background:var(--bg3);border:1px solid var(--border2);border-radius:20px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 14px;outline:none;width:180px;transition:border-color .15s}
+.tl-search:focus{border-color:var(--blue);width:220px}
+.filter-count{font-size:10px;opacity:.6;margin-left:3px}
+
+/* Improved hero stats */
+.hero-stats{display:inline-grid;grid-template-columns:repeat(4,1fr);gap:0;background:linear-gradient(160deg,var(--bg3),var(--bg2));border:1px solid var(--border2);border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.hero-stat{padding:10px 18px;text-align:center;border-right:1px solid var(--border)}
+.hero-stat:nth-child(4n){border-right:none}
+.hero-stat:nth-child(n+5){border-top:1px solid var(--border)}
+.hs-val{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:var(--gold)}
+.hs-lbl{font-size:9px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-top:3px}
+
 /* Empty state */
 .tl-empty{text-align:center;padding:80px 20px}
 .tl-empty-icon{font-size:48px;margin-bottom:16px;opacity:.2}
@@ -163,13 +197,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="hero-stats" id="heroStats">
     <div class="hero-stat"><div class="hs-val" id="statMatches">—</div><div class="hs-lbl">Matches</div></div>
     <div class="hero-stat"><div class="hs-val" id="statWins">—</div><div class="hs-lbl">Wins</div></div>
+    <div class="hero-stat"><div class="hs-val" id="statWinPct">—</div><div class="hs-lbl">Win %</div></div>
+    <div class="hero-stat"><div class="hs-val" id="statStreak">—</div><div class="hs-lbl">Win Streak</div></div>
+    <div class="hero-stat"><div class="hs-val" id="statGF">—</div><div class="hs-lbl">Goals</div></div>
+    <div class="hero-stat"><div class="hs-val" id="statGD">—</div><div class="hs-lbl">Goal Diff</div></div>
     <div class="hero-stat"><div class="hs-val" id="statTransfers">—</div><div class="hs-lbl">Transfers</div></div>
     <div class="hero-stat"><div class="hs-val" id="statMilestones">—</div><div class="hs-lbl">Milestones</div></div>
   </div>
 </div>
 
+<!-- Snapshot section -->
+<div class="snapshot" id="snapshot"></div>
+
 <!-- Filter bar -->
 <div class="filter-bar">
+  <input class="tl-search" id="tlSearch" type="text" placeholder="Search events…" oninput="handleSearch(this.value)">
   <button class="filter-chip on" data-cat="all" onclick="setFilter('all')">All Events</button>
   <button class="filter-chip" data-cat="match" onclick="setFilter('match')">⚽ Matches</button>
   <button class="filter-chip" data-cat="transfer" onclick="setFilter('transfer')">🔄 Transfers</button>
@@ -426,16 +468,93 @@ function buildEvents(){
   // Sort all events by date descending (newest first)
   EVENTS.sort((a,b)=>b.date?.localeCompare(a.date||'')||0);
 
+}
+
+// ── Stats + Snapshot ──────────────────────────────────────────────────────────
+function computeStats(){
+  const sorted=[...MATCHES].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const wins=sorted.filter(m=>m.goalsFor>m.goalsAgainst).length;
+  const total=sorted.length;
+  const gf=sorted.reduce((s,m)=>s+(parseInt(m.goalsFor)||0),0);
+  const ga=sorted.reduce((s,m)=>s+(parseInt(m.goalsAgainst)||0),0);
+  const winPct=total?Math.round(wins/total*100):0;
+
+  // Current win streak (from most recent matches backwards)
+  let streak=0;
+  for(let i=sorted.length-1;i>=0;i--){
+    if(sorted[i].goalsFor>sorted[i].goalsAgainst)streak++;else break;
+  }
+
+  // Top performers from match stats
+  const perfMap={};
+  SQUAD.forEach(p=>{
+    const ms=p.matchStats||{};
+    if((ms.apps||0)>0)perfMap[p.id]={p,goals:ms.goals||0,assists:ms.assists||0,motms:ms.motms||0,avgRating:ms.avgRating||0,apps:ms.apps||0};
+  });
+  const perf=Object.values(perfMap);
+  const topScorer=perf.sort((a,b)=>b.goals-a.goals)[0];
+  const mostMotm=perf.sort((a,b)=>b.motms-a.motms)[0];
+  const bestRated=perf.filter(x=>x.apps>=3).sort((a,b)=>b.avgRating-a.avgRating)[0];
+
   // Update hero stats
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('statMatches',total||'—');
+  set('statWins',wins||'—');
+  set('statWinPct',total?(winPct+'%'):'—');
+  set('statStreak',streak||'—');
+  set('statGF',gf||'—');
+  const gdStr=(gf-ga)>0?'+'+(gf-ga):(gf-ga);
+  set('statGD',total?gdStr:'—');
+  set('statTransfers',TRANSFERS.length||'—');
   const milestoneCount=EVENTS.filter(e=>e.cat==='milestone').length;
-  document.getElementById('statMatches').textContent=MATCHES.length;
-  document.getElementById('statWins').textContent=MATCHES.filter(m=>m.goalsFor>m.goalsAgainst).length;
-  document.getElementById('statTransfers').textContent=TRANSFERS.length;
-  document.getElementById('statMilestones').textContent=milestoneCount;
+  set('statMilestones',milestoneCount||'—');
+
+  // Form strip (last 10)
+  const snap=document.getElementById('snapshot');snap.innerHTML='';
+  if(sorted.length){
+    const last10=sorted.slice(-10).reverse();
+    const fw=document.createElement('div');fw.className='form-wrap';
+    const lbl=document.createElement('div');lbl.className='form-label';lbl.textContent='Recent Form';
+    const dots=document.createElement('div');dots.className='form-dots';
+    last10.forEach(m=>{
+      const r=m.goalsFor>m.goalsAgainst?'W':m.goalsFor===m.goalsAgainst?'D':'L';
+      const dot=document.createElement('div');dot.className='form-dot '+r;
+      dot.title=(r==='W'?'Win':r==='D'?'Draw':'Loss')+' vs '+(m.opponent||'?')+' '+m.goalsFor+'-'+m.goalsAgainst;
+      dot.textContent=r;dots.appendChild(dot);
+    });
+    fw.appendChild(lbl);fw.appendChild(dots);snap.appendChild(fw);
+  }
+
+  // Top performers grid
+  if(perf.length){
+    const grid=document.createElement('div');grid.className='snap-grid';
+    function snapCard(val,name,pos,lbl,col){
+      const card=document.createElement('div');card.className='snap-card';
+      const av=document.createElement('div');av.className='snap-av';
+      av.style.cssText=`background:${avc(name||'')}22;color:${avc(name||'')};border:1px solid ${avc(name||'')}33`;
+      av.textContent=ini(name||'?');
+      const info=document.createElement('div');info.className='snap-info';
+      const v=document.createElement('div');v.className='snap-val';v.style.color=col||'var(--text)';v.textContent=val;
+      const n=document.createElement('div');n.className='snap-name';n.textContent=name||'—';
+      const l=document.createElement('div');l.className='snap-lbl';l.textContent=lbl;
+      info.appendChild(v);info.appendChild(n);info.appendChild(l);
+      card.appendChild(av);card.appendChild(info);return card;
+    }
+    if(topScorer&&topScorer.goals>0)grid.appendChild(snapCard(topScorer.goals+'⚽',topScorer.p.name,topScorer.p.position,'Top Scorer','#34d399'));
+    if(bestRated&&bestRated.avgRating>0)grid.appendChild(snapCard(bestRated.avgRating.toFixed(1),bestRated.p.name,bestRated.p.position,'Best Rating','#4a8aff'));
+    if(mostMotm&&mostMotm.motms>0)grid.appendChild(snapCard(mostMotm.motms+'⭐',mostMotm.p.name,mostMotm.p.position,'Most MOTM','#fbbf24'));
+    if(grid.children.length)snap.appendChild(grid);
+  }
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
 let activeFilterKey='all';
+let searchQuery='';
+
+function handleSearch(q){
+  searchQuery=q.toLowerCase().trim();
+  renderTimeline();
+}
 
 function setFilter(cat){
   activeFilterKey=cat;
@@ -445,11 +564,31 @@ function setFilter(cat){
   renderTimeline();
 }
 
+function updateChipCounts(){
+  const cats=['all','match','transfer','player','milestone'];
+  cats.forEach(cat=>{
+    const count=cat==='all'?EVENTS.length:EVENTS.filter(e=>e.cat===cat).length;
+    const chip=document.querySelector(`.filter-chip[data-cat="${cat}"]`);
+    if(chip){
+      const existing=chip.querySelector('.filter-count');
+      if(existing)existing.remove();
+      const badge=document.createElement('span');badge.className='filter-count';badge.textContent=count;
+      chip.appendChild(badge);
+    }
+  });
+}
+
 function renderTimeline(){
   const tl=document.getElementById('timeline');
   tl.innerHTML='';
 
-  const filtered=activeFilterKey==='all'?EVENTS:EVENTS.filter(e=>e.cat===activeFilterKey);
+  let filtered=activeFilterKey==='all'?EVENTS:EVENTS.filter(e=>e.cat===activeFilterKey);
+  if(searchQuery){
+    filtered=filtered.filter(e=>{
+      const hay=(e.headline+' '+(e.body||'')+' '+(e.playerName||'')).toLowerCase();
+      return hay.includes(searchQuery);
+    });
+  }
 
   if(!filtered.length){
     const empty=document.createElement('div');empty.className='tl-empty';
@@ -572,6 +711,8 @@ if(!SQUAD.length&&!MATCHES.length&&!TRANSFERS.length){
   document.getElementById('timeline').innerHTML='<div class="tl-empty"><div class="tl-empty-icon">📜</div><div class="tl-empty-title">Your story begins now</div><div class="tl-empty-sub">Head to the Squad Tracker and start logging matches, transfers, and player upgrades.<br>Everything gets compiled here automatically.</div></div>';
 } else {
   buildEvents();
+  computeStats();
+  updateChipCounts();
   renderTimeline();
 }
 </script>
