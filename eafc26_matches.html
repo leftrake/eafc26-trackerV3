@@ -131,11 +131,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .eslot-c.empty{background:rgba(0,0,0,.3);border:2px dashed rgba(255,255,255,.2)}
 .eslot-c.empty:hover,.eslot-c.empty.active{border-color:rgba(61,126,255,.8);background:rgba(61,126,255,.15)}
 .eslot-c.filled{border:2px solid rgba(255,255,255,.3)}
-.eslot-c.filled:hover{border-color:rgba(239,68,68,.7)}
+.eslot-c.filled:hover{border-color:rgba(61,126,255,.7);background-color:rgba(61,126,255,.1)}
 .eslot-c.active{box-shadow:0 0 0 3px rgba(61,126,255,.4)!important;border-color:var(--blue)!important}
-.eslot-rm{position:absolute;inset:0;border-radius:50%;background:rgba(239,68,68,.0);display:flex;align-items:center;justify-content:center;opacity:0;transition:all .15s;font-size:16px;color:#fff;font-weight:700}
-.eslot-c.filled:hover .eslot-rm{opacity:1;background:rgba(239,68,68,.7)}
+.eslot-c.drag-over{border-color:rgba(34,197,94,.9)!important;background:rgba(34,197,94,.2)!important;transform:scale(1.1)}
+.eslot-rm{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;font-size:9px;color:#fff;font-weight:700;cursor:pointer;z-index:2}
+.eslot-c.filled:hover .eslot-rm{opacity:1}
 .eslot-name{font-size:9px;font-weight:600;color:rgba(255,255,255,.8);text-shadow:0 1px 4px rgba(0,0,0,.9);text-align:center;max-width:56px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Predict banner */
+.predict-banner{display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:9px;background:rgba(61,126,255,.07);border:1px solid rgba(61,126,255,.22);margin-bottom:12px;font-size:12px;color:var(--text2)}
+/* Bench */
+.bench-wrap{margin-bottom:12px}
+.bench-lbl{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
+.bench-scroll{display:flex;gap:6px;flex-wrap:wrap;padding:2px 0}
+.bench-tile{display:flex;align-items:center;gap:5px;padding:5px 9px 5px 6px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);cursor:grab;transition:all .12s;white-space:nowrap}
+.bench-tile:hover,.bench-tile.active-pick{border-color:var(--blue);background:rgba(61,126,255,.1)}
+.bench-tile.dragging{opacity:.35}
 /* Subs */
 .subs-lbl{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
 .subs-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
@@ -454,13 +464,48 @@ function mkSVG(){
   return s;
 }
 
+// ── Lineup Prediction ─────────────────────────────────────────────────────────
+function predictLineup(draft){
+  if(!MATCHES.length)return;
+  // Most-used formation
+  const fFreq={};
+  MATCHES.forEach(m=>{if(m.formation)fFreq[m.formation]=(fFreq[m.formation]||0)+1;});
+  const fmt=Object.entries(fFreq).sort((a,b)=>b[1]-a[1])[0]?.[0];
+  if(!fmt||!FMT[fmt])return;
+  draft.formation=fmt;
+  // Frequency of each player per slot index
+  const matchesWithFmt=MATCHES.filter(m=>m.formation===fmt&&Array.isArray(m.xi));
+  if(!matchesWithFmt.length)return;
+  const slotFreq={};
+  matchesWithFmt.forEach(m=>{
+    (m.xi||[]).forEach((xi,i)=>{
+      if(!xi?.playerId)return;
+      if(!slotFreq[i])slotFreq[i]={};
+      slotFreq[i][xi.playerId]=(slotFreq[i][xi.playerId]||0)+1;
+    });
+  });
+  const used=new Set();
+  draft.xi=FMT[fmt].map((slot,i)=>{
+    const freq=slotFreq[i]||{};
+    const ranked=Object.entries(freq).sort((a,b)=>b[1]-a[1]).map(([pid])=>pid);
+    for(const pid of ranked){
+      if(used.has(pid))continue;
+      if(!SQUAD.find(x=>x.id===pid))continue;
+      used.add(pid);return{playerId:pid,pos:slot.p};
+    }
+    return null;
+  });
+  draft._predicted=true;
+  draft._predMatches=matchesWithFmt.length;
+}
+
 // ── Modal ─────────────────────────────────────────────────────────────────────
 function openModal(existingMatch){
   const isEditing=!!existingMatch;
   const draft=isEditing
     ?JSON.parse(JSON.stringify(existingMatch))
     :{id:Date.now().toString(),date:new Date().toISOString().slice(0,10),competition:'League',venue:'Home',opponent:'',goalsFor:0,goalsAgainst:0,formation:'4-3-3',xi:Array(11).fill(null),subs:[],playerStats:{},notes:''};
-  let step=1,activeSlot=null,pickerQ='';
+  let step=1,activeSlot=null,pickerQ='',dragSrc=null;
   const overlay=css(mk('div','overlay'),{});
   overlay.onclick=e=>{if(e.target===overlay)overlay.remove();};
   document.body.appendChild(overlay);
@@ -547,11 +592,15 @@ function openModal(existingMatch){
 
   // ── Step 2 ────────────────────────────────────────────────────────────────
   function step2(body){
-    // Formation
+    // Auto-predict for new matches on first entry
+    if(!isEditing&&!draft._predicted&&(draft.xi||[]).every(x=>!x))predictLineup(draft);
+    // Predict banner
+    if(draft._predicted)body.appendChild(buildPredictBanner());
+    // Formation chips
     const fb=mk('div','fbar');
     Object.keys(FMT).forEach(f=>{
       const c=mk('div','fchip '+(draft.formation===f?'on':''),f);
-      c.onclick=()=>{draft.formation=f;draft.xi=Array(11).fill(null);activeSlot=null;pickerQ='';redraw();};
+      c.onclick=()=>{draft.formation=f;draft.xi=Array(11).fill(null);draft._predicted=false;activeSlot=null;pickerQ='';redraw();};
       fb.appendChild(c);
     });
     body.appendChild(fb);
@@ -560,14 +609,62 @@ function openModal(existingMatch){
     // Subs
     body.appendChild(mk('div','subs-lbl','Substitutes (up to 9)'));
     body.appendChild(buildSubsRow());
-    // Picker
+    // Bench (available players not in XI or subs)
+    body.appendChild(buildBench());
+    // Picker (shown when a slot is active)
     if(activeSlot!==null)body.appendChild(buildPicker());
+  }
+
+  function buildPredictBanner(){
+    const n=draft._predMatches||0;
+    const filled=(draft.xi||[]).filter(Boolean).length;
+    const banner=mk('div','predict-banner');
+    app(banner,
+      css(mk('span','','🤖'),{fontSize:'14px',flexShrink:'0'}),
+      css(mk('span','',`Lineup predicted from ${n} match${n!==1?'es':''} · ${filled}/11 filled · Drag or tap a slot to change`),{flex:'1'}),
+      Object.assign(mk('button','btn xs ghost','Clear'),{onclick:()=>{draft.xi=Array(11).fill(null);draft._predicted=false;redraw();}})
+    );
+    return banner;
+  }
+
+  function buildBench(){
+    const usedAll=new Set([...(draft.xi||[]).filter(Boolean).map(s=>s.playerId),...(draft.subs||[]).map(s=>s.playerId)]);
+    const avail=SQUAD.filter(p=>!usedAll.has(p.id)).sort((a,b)=>getOVR(b)-getOVR(a));
+    const wrap=mk('div','bench-wrap');
+    wrap.appendChild(mk('div','bench-lbl','Available — drag to pitch or tap when a slot is selected'));
+    const row=mk('div','bench-scroll');
+    if(!avail.length){app(row,css(mk('span','','All players in lineup'),{color:'var(--text3)',fontSize:'12px',fontStyle:'italic'}));}
+    avail.forEach(p=>{
+      const pc2=PC[p.position]||'#6b7280';
+      const tile=mk('div','bench-tile');
+      const av=css(mk('div','',ini(p.name)),{width:'22px',height:'22px',borderRadius:'5px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'8px',fontWeight:'700',background:avc(p.name)+'33',color:avc(p.name),flexShrink:'0'});
+      const pos=css(mk('span','',p.position||'?'),{fontSize:'9px',fontWeight:'700',color:pc2});
+      const nm=css(mk('span','',p.name.split(' ').at(-1)||p.name),{fontSize:'11px',fontWeight:'600',color:'var(--text)'});
+      const ov=css(mk('span','',String(getOVR(p)||'—')),{fontSize:'10px',fontFamily:"'DM Mono',monospace",color:'var(--text3)'});
+      app(tile,av,pos,nm,ov);
+      // Click: assign to active slot
+      tile.onclick=()=>{
+        if(activeSlot!==null&&activeSlot!=='sub'){
+          draft.xi[activeSlot]={playerId:p.id,pos:FMT[draft.formation]?.[activeSlot]?.p};
+          activeSlot=null;redraw();
+        } else if(activeSlot==='sub'){
+          draft.subs.push({playerId:p.id});activeSlot=null;redraw();
+        }
+      };
+      // Drag
+      tile.draggable=true;
+      tile.ondragstart=e=>{dragSrc={type:'bench',playerId:p.id};tile.classList.add('dragging');e.dataTransfer.effectAllowed='move';};
+      tile.ondragend=()=>tile.classList.remove('dragging');
+      row.appendChild(tile);
+    });
+    wrap.appendChild(row);
+    return wrap;
   }
 
   function buildEditPitch(){
     const fs=FMT[draft.formation]||FMT['4-3-3'];
     const wrap=css(mk('div','epitch'),{height:'340px'});
-    const bg=mk('div','epitch-bg');wrap.appendChild(bg);
+    wrap.appendChild(mk('div','epitch-bg'));
     wrap.appendChild(mkSVG());
     fs.forEach((slot,i)=>{
       const xi=draft.xi[i];const pl=xi?SQUAD.find(x=>x.id===xi.playerId):null;
@@ -577,12 +674,34 @@ function openModal(existingMatch){
       if(pl){
         css(circle,{background:avc(pl.name)+'44',borderColor:isAct?'var(--blue)':avc(pl.name)+'99'});
         circle.appendChild(css(mk('span','',ini(pl.name)),{fontSize:'11px',fontWeight:'700',color:avc(pl.name)}));
-        const rm=mk('div','eslot-rm','✕');circle.appendChild(rm);
-        circle.onclick=()=>{draft.xi[i]=null;if(activeSlot===i)activeSlot=null;redraw();};
+        // ✕ badge to remove (top-right, visible on hover)
+        const rm=mk('div','eslot-rm','✕');
+        rm.onclick=e=>{e.stopPropagation();draft.xi[i]=null;if(activeSlot===i)activeSlot=null;redraw();};
+        circle.appendChild(rm);
+        // Click filled slot → select it (open picker), not remove
+        circle.onclick=()=>{activeSlot=activeSlot===i?null:i;pickerQ='';redraw();};
+        // Drag filled slot (swap with another slot or bench)
+        se.draggable=true;
+        se.ondragstart=e=>{dragSrc={type:'slot',idx:i,playerId:pl.id};e.dataTransfer.effectAllowed='move';};
       } else {
         circle.appendChild(css(mk('span','',slot.p),{fontSize:'9px',fontWeight:'700',color:'rgba(255,255,255,.3)'}));
         circle.onclick=()=>{activeSlot=activeSlot===i?null:i;pickerQ='';redraw();};
       }
+      // Drop target for every slot
+      se.ondragover=e=>{e.preventDefault();e.dataTransfer.dropEffect='move';circle.classList.add('drag-over');};
+      se.ondragleave=()=>circle.classList.remove('drag-over');
+      se.ondrop=e=>{
+        e.preventDefault();circle.classList.remove('drag-over');
+        if(!dragSrc)return;
+        if(dragSrc.type==='slot'&&dragSrc.idx!==i){
+          // Swap two pitch slots
+          const tmp=draft.xi[dragSrc.idx];draft.xi[dragSrc.idx]=draft.xi[i];draft.xi[i]=tmp;
+        } else if(dragSrc.type==='bench'){
+          // Place bench player, push any existing occupant back to bench implicitly
+          draft.xi[i]={playerId:dragSrc.playerId,pos:slot.p};
+        }
+        dragSrc=null;activeSlot=null;redraw();
+      };
       const nm=mk('div','eslot-name',pl?pl.name.split(' ').at(-1):slot.p);
       if(!pl)css(nm,{color:'rgba(255,255,255,.3)'});
       app(se,circle,nm);wrap.appendChild(se);
