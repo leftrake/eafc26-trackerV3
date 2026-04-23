@@ -189,7 +189,7 @@ function buildPreview(){
   // Squad overview card
   const overview=div('card');
   overview.appendChild(secTitle('Squad Overview'));
-  const avgOVR=FIRST.length?Math.round(FIRST.map(getOVR).reduce((a,b)=>a+b,0)/FIRST.length):0;
+  const avgOVR=FIRST.length?Math.round(FIRST.map(calcOVR).reduce((a,b)=>a+b,0)/FIRST.length):0;
   const totalWages=FIRST.reduce((a,p)=>a+(parseInt(p.wage)||0),0);
   const stats=[
     ['Players',FIRST.length],['Avg OVR',avgOVR],['Academy',ACADEMY.length],
@@ -275,104 +275,155 @@ function buildTextReport(){
   const HR=()=>L('═'.repeat(70));
   const hr=()=>L('─'.repeat(60));
   const now=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const gameDate=localStorage.getItem('eafc26_gamedate')||now;
 
-  HR();L('EAFC 26 CAREER MODE — SQUAD ANALYSIS REPORT');L('Generated: '+now);HR();L('');
-  L('This report is intended for AI analysis. Please provide:');
-  L('1. Strengths and weaknesses of the current squad');
-  L('2. Which players look like the future of the club');
-  L('3. Which formations may suit this squad best');
-  L('4. Key areas that need reinforcement');
-  L('5. Any tactical observations from the match data');
+  // ── HEADER + AI INSTRUCTIONS ──
+  HR();
+  L('EAFC 26 CAREER MODE — SQUAD ANALYSIS REPORT');
+  L('Report Date: '+now+(gameDate?' | In-Game Date: '+gameDate:''));
+  HR();
+  L('');
+  L('INSTRUCTIONS FOR AI ASSISTANT:');
+  L('You are analysing an EA FC 26 career mode save. Using the data below, please:');
+  L('  1. Identify the squad\'s main tactical strengths and weaknesses');
+  L('  2. Flag any positional gaps or lack of cover (thin depth at a position)');
+  L('  3. Call out players whose form or rating suggests they may need replacing');
+  L('  4. Highlight the best academy prospects ready to step up');
+  L('  5. Analyse formation performance and suggest the best tactical setup');
+  L('  6. Note any players with expiring contracts or poor value (high wage, low OVR)');
+  L('  7. Spot any standout performers the manager should build around');
   L('');
 
-  // ── SQUAD OVERVIEW ──
+  // ── SECTION 1: SQUAD OVERVIEW ──
   HR();L('SECTION 1: SQUAD OVERVIEW');HR();
-  const avgOVR=FIRST.length?Math.round(FIRST.map(getOVR).reduce((a,b)=>a+b,0)/FIRST.length):0;
+  const avgOVR=FIRST.length?Math.round(FIRST.map(calcOVR).reduce((a,b)=>a+b,0)/FIRST.length):0;
   const totalWages=FIRST.reduce((a,p)=>a+(parseInt(p.wage)||0),0);
-  L('First Team Size: '+FIRST.length+' players');
-  L('Academy Size: '+ACADEMY.length+' players');
-  L('Squad Average OVR: '+avgOVR);
-  L('Total Weekly Wages: £'+totalWages.toLocaleString());
+  const injured=FIRST.filter(p=>p.status==='Injured');
+  const suspended=FIRST.filter(p=>p.status==='Suspended');
+  const onLoan=SQUAD.filter(p=>p.onLoan);
+  L('First Team: '+FIRST.length+' players | Academy: '+ACADEMY.length+' players');
+  L('Squad Average OVR: '+avgOVR+' | Weekly Wages: £'+totalWages.toLocaleString());
+  if(MATCHES.length){
+    const winPct=Math.round(wins/MATCHES.length*100);
+    L('Match Record: '+wins+'W '+draws+'D '+losses+'L ('+winPct+'% win rate)');
+    L('Goals: '+gf+' for, '+ga+' against (GD '+(gf-ga>=0?'+':'')+(gf-ga)+')');
+    // Recent form (last 5)
+    const last5=[...MATCHES].reverse().slice(0,5).map(m=>m.goalsFor>m.goalsAgainst?'W':m.goalsFor===m.goalsAgainst?'D':'L');
+    L('Recent Form (last 5): '+last5.join('-'));
+  }
+  if(injured.length)L('Injured: '+injured.map(p=>p.name).join(', '));
+  if(suspended.length)L('Suspended: '+suspended.map(p=>p.name).join(', '));
+  if(onLoan.length)L('On Loan Out: '+onLoan.map(p=>p.name+(p.loanClub?' → '+p.loanClub:'')).join(', '));
   L('');
 
   // Position depth
-  L('POSITION DEPTH (First Team):');
+  L('POSITION DEPTH:');
   const posOrder=['GK','CB','LB','RB','CDM','CM','CAM','LM','LW','RW','ST','CF'];
   posOrder.forEach(pos=>{
-    const count=FIRST.filter(p=>p.position===pos).length;
-    if(count>0)L('  '+pos.padEnd(6)+': '+'█'.repeat(count)+' ('+count+')');
+    const players=FIRST.filter(p=>p.position===pos);
+    if(!players.length)return;
+    const bar='█'.repeat(players.length);
+    const note=players.length===1?' ⚠ NO BACKUP':'';
+    L('  '+pos.padEnd(6)+': '+bar+' ('+players.length+')'+note);
   });
+  // Missing positions entirely
+  const missing=posOrder.filter(pos=>!FIRST.some(p=>p.position===pos));
+  if(missing.length)L('  Missing positions: '+missing.join(', '));
   L('');
 
-  // ── FIRST TEAM PLAYERS ──
+  // ── SECTION 2: FIRST TEAM PLAYER PROFILES ──
   HR();L('SECTION 2: FIRST TEAM PLAYER PROFILES');HR();
   FIRST.forEach((p,i)=>{
     const ovr=calcOVR(p);const ms=p.matchStats||{};
     hr();
-    L((i+1)+'. '+p.name.toUpperCase());
-    L('   Position: '+p.position+(p.age?' | Age: '+p.age:'')+(p.nationality?' | Nationality: '+p.nationality:''));
-    L('   Overall Rating: '+ovr+(p.manualOVR?' (manual)':' (calculated)'));
-    if(p.foot||p.weakfoot||p.skillmoves)L('   Foot: '+(p.foot||'?')+' | Weak Foot: '+(p.weakfoot||'?')+'★ | Skill: '+(p.skillmoves||'?')+'★');
+    L((i+1)+'. '+p.name.toUpperCase()+' — '+p.position+(p.age?' (Age '+p.age+')':''));
+    L('   OVR: '+ovr+(p.manualOVR?' [manual]':'')+
+      (p.foot?' | Foot: '+p.foot:'')+(p.weakfoot?' | Weak Foot: '+p.weakfoot+'★':'')+
+      (p.skillmoves?' | Skill: '+p.skillmoves+'★':''));
+    if(p.nationality)L('   Nationality: '+p.nationality);
+    // Contract info — flag short contracts
     if(p.wage||p.value||p.contractEnd){
-      let contract=[];
-      if(p.wage)contract.push('Wage: £'+Number(p.wage).toLocaleString()+'/w');
-      if(p.value)contract.push('Value: £'+(parseInt(p.value)/1e6).toFixed(1)+'M');
-      if(p.contractEnd)contract.push('Contract until: '+p.contractEnd);
-      L('   '+contract.join(' | '));
+      const parts=[];
+      if(p.wage)parts.push('Wage: £'+Number(p.wage).toLocaleString()+'/w');
+      if(p.value)parts.push('Value: £'+(parseInt(p.value)/1e6).toFixed(1)+'M');
+      if(p.contractEnd){
+        parts.push('Contract: '+p.contractEnd);
+        const yr=parseInt((p.contractEnd||'').split('/').pop()||p.contractEnd);
+        if(yr&&yr<=2026)parts.push('⚠ CONTRACT EXPIRING SOON');
+      }
+      L('   '+parts.join(' | '));
     }
-    // Key stats
+    if(p.status&&p.status!=='Fit')L('   Status: ⚠ '+p.status+(p.onLoan?' (loan at '+p.loanClub+')':''));
+    // Key position stats (top 5 weighted attributes)
     if(p.stats&&Object.keys(p.stats).length){
       const w=OVR_W[p.position]||{};
-      const topStats=Object.entries(w).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([stat])=>stat+': '+(p.stats[stat]||'—')).join(' | ');
+      const topStats=Object.entries(w).sort((a,b)=>b[1]-a[1]).slice(0,5)
+        .map(([stat])=>stat+': '+(p.stats[stat]||'—')).join(' | ');
       if(topStats)L('   Key Attributes: '+topStats);
-      // Also show all stats for full context
-      const allStats=Object.entries(p.stats).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([k,v])=>k+':'+v).join(', ');
-      if(allStats)L('   All Stats: '+allStats);
+      const allStats=Object.entries(p.stats).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1])
+        .map(([k,v])=>k+':'+v).join(', ');
+      if(allStats)L('   Full Stats: '+allStats);
     }
+    // Match performance
     if(ms.apps>0){
-      L('   Season Stats: '+ms.apps+' apps | '+ms.goals+' goals | '+ms.assists+' assists | '+(ms.motms||0)+' MOTM | Avg Rating: '+(ms.avgRating?.toFixed(2)||'—'));
+      const rtg=ms.avgRating?.toFixed(2)||'—';
+      const form=ms.avgRating>=7.5?'🔥 Excellent form':ms.avgRating>=6.5?'Good form':ms.avgRating?'Poor form':'';
+      L('   Performance: '+ms.apps+' apps | '+ms.goals+' G | '+ms.assists+' A | '+(ms.motms||0)+' MOTM | Avg '+rtg+(form?' ('+form+')':''));
+    }
+    // OVR growth
+    if(p.history&&p.history.length>=2){
+      const sorted=[...p.history].sort((a,b)=>a.date.localeCompare(b.date));
+      const first=sorted[0],last=sorted[sorted.length-1];
+      const growth=(last.ovr||0)-(first.ovr||0);
+      L('   OVR Growth: '+(growth>0?'+':'')+growth+' ('+first.ovr+'→'+last.ovr+' over '+sorted.length+' logs)');
     }
     if(p.playstyles&&p.playstyles.length)L('   Playstyles: '+p.playstyles.join(', '));
-    if(p.status&&p.status!=='Fit')L('   Status: '+p.status+(p.onLoan?' (On loan at '+p.loanClub+')':''));
     if(p.notes)L('   Scout Notes: '+p.notes);
     L('');
   });
 
-  // ── ACADEMY ──
+  // ── SECTION 3: ACADEMY PROSPECTS ──
   if(ACADEMY.length){
     HR();L('SECTION 3: ACADEMY PROSPECTS');HR();
-    L('These are players to watch as potential first-team contributors:');L('');
+    L('Sorted by potential ceiling. Consider readiness vs first-team depth gaps.');L('');
     ACADEMY.forEach((p,i)=>{
-      const potStr=p.potHigh?'Potential: '+p.potLow+'–'+p.potHigh:'';
       hr();
-      L((i+1)+'. '+p.name.toUpperCase());
-      L('   Position: '+p.position+(p.age?' | Age: '+p.age:'')+(p.nationality?' | '+p.nationality:''));
-      if(potStr)L('   '+potStr);
+      L((i+1)+'. '+p.name.toUpperCase()+' — '+p.position+(p.age?' (Age '+p.age+')':''));
+      if(p.potHigh)L('   Potential: '+p.potLow+'–'+p.potHigh+' | Current OVR: '+calcOVR(p));
+      if(p.nationality)L('   Nationality: '+p.nationality);
       if(p.stats&&Object.keys(p.stats).length){
-        const allStats=Object.entries(p.stats).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([k,v])=>k+':'+v).join(', ');
+        const allStats=Object.entries(p.stats).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1])
+          .map(([k,v])=>k+':'+v).join(', ');
         if(allStats)L('   Current Stats: '+allStats);
+      }
+      if(p.history&&p.history.length>=2){
+        const sorted=[...p.history].sort((a,b)=>a.date.localeCompare(b.date));
+        const g=(sorted[sorted.length-1].ovr||0)-(sorted[0].ovr||0);
+        L('   OVR Growth: '+(g>0?'+':'')+g+' over '+sorted.length+' logs');
       }
       if(p.notes)L('   Notes: '+p.notes);
       L('');
     });
   }
 
-  // ── MATCH RECORD ──
+  // ── SECTION 4: MATCH RECORD ──
   if(MATCHES.length){
-    HR();L('SECTION 4: MATCH RECORD & RESULTS');HR();
-    L('Overall Record: '+wins+'W | '+draws+'D | '+losses+'L');
-    L('Goals For: '+gf+' | Goals Against: '+ga+' | GD: '+(gf-ga>=0?'+':'')+(gf-ga));
-    if(MATCHES.length)L('Points (3 for W, 1 for D): '+(wins*3+draws));
+    HR();L('SECTION 4: MATCH RECORD & ANALYSIS');HR();
+    L('Record: '+wins+'W '+draws+'D '+losses+'L | Points: '+(wins*3+draws));
+    L('Goals: '+gf+' for, '+ga+' against | GD: '+(gf-ga>=0?'+':'')+(gf-ga));
     L('');
 
     if(formationsSorted.length){
-      L('FORMATION USAGE:');
+      L('FORMATION PERFORMANCE:');
+      L('  '+('Formation').padEnd(12)+('Games').padEnd(8)+('Wins').padEnd(8)+('Win%').padEnd(8)+'GF   GA   GD');
+      L('  '+'-'.repeat(56));
       formationsSorted.forEach(([f,c])=>{
-        const fWins=MATCHES.filter(m=>m.formation===f&&m.goalsFor>m.goalsAgainst).length;
-        const fGames=MATCHES.filter(m=>m.formation===f).length;
-        const fGF=MATCHES.filter(m=>m.formation===f).reduce((a,m)=>a+(parseInt(m.goalsFor)||0),0);
-        const fGA=MATCHES.filter(m=>m.formation===f).reduce((a,m)=>a+(parseInt(m.goalsAgainst)||0),0);
-        L('  '+f.padEnd(10)+': '+c+' games | '+fWins+' wins | GF:'+fGF+' GA:'+fGA);
+        const fMatches=MATCHES.filter(m=>m.formation===f);
+        const fW=fMatches.filter(m=>m.goalsFor>m.goalsAgainst).length;
+        const fGF=fMatches.reduce((a,m)=>a+(parseInt(m.goalsFor)||0),0);
+        const fGA=fMatches.reduce((a,m)=>a+(parseInt(m.goalsAgainst)||0),0);
+        const fPct=Math.round(fW/c*100)+'%';
+        L('  '+f.padEnd(12)+String(c).padEnd(8)+String(fW).padEnd(8)+fPct.padEnd(8)+String(fGF).padEnd(5)+String(fGA).padEnd(5)+(fGF-fGA>=0?'+':'')+(fGF-fGA));
       });
       L('');
     }
@@ -381,54 +432,55 @@ function buildTextReport(){
     const compGroups={};
     MATCHES.forEach(m=>{const c=m.competition||'Other';if(!compGroups[c])compGroups[c]={w:0,d:0,l:0,gf:0,ga:0};const r=m.goalsFor>m.goalsAgainst?'w':m.goalsFor===m.goalsAgainst?'d':'l';compGroups[c][r]++;compGroups[c].gf+=parseInt(m.goalsFor)||0;compGroups[c].ga+=parseInt(m.goalsAgainst)||0;});
     L('BY COMPETITION:');
-    Object.entries(compGroups).forEach(([c,r])=>L('  '+c.padEnd(22)+': '+r.w+'W '+r.d+'D '+r.l+'L | GF:'+r.gf+' GA:'+r.ga));
+    Object.entries(compGroups).sort((a,b)=>(b[1].w+b[1].d+b[1].l)-(a[1].w+a[1].d+a[1].l))
+      .forEach(([c,r])=>L('  '+c.padEnd(22)+': '+r.w+'W '+r.d+'D '+r.l+'L | GF:'+r.gf+' GA:'+r.ga));
     L('');
 
-    L('ALL MATCHES (chronological):');
-    MATCHES.forEach((m,i)=>{
-      const isW=m.goalsFor>m.goalsAgainst,isD=m.goalsFor===m.goalsAgainst;
-      const res=isW?'W':isD?'D':'L';
-      L('  '+(i+1)+'. ['+res+'] '+m.date+' | '+(m.venue||'?')+' vs '+m.opponent+' | '+(m.goalsFor??0)+'-'+(m.goalsAgainst??0)+' | '+m.formation+' | '+(m.competition||''));
-    });
-    L('');
-
-    // Player performance across all matches
-    L('PLAYER PERFORMANCE SUMMARY (across all matches):');
-    const perfPlayers=FIRST.filter(p=>(p.matchStats?.apps||0)>0).sort((a,b)=>(b.matchStats?.apps||0)-(a.matchStats?.apps||0));
+    // Player performance table
+    L('PLAYER PERFORMANCE TABLE:');
+    const perfPlayers=FIRST.filter(p=>(p.matchStats?.apps||0)>0)
+      .sort((a,b)=>(b.matchStats?.goals||0)-(a.matchStats?.goals||0));
     if(perfPlayers.length){
-      L('  Name'.padEnd(26)+'Apps  Goals  Assists  AvgRating  MOTM');
-      L('  '+'-'.repeat(65));
+      L('  '+('Name').padEnd(24)+('Apps').padEnd(6)+('G').padEnd(5)+('A').padEnd(5)+('MOTM').padEnd(6)+'AvgRtg');
+      L('  '+'-'.repeat(58));
       perfPlayers.forEach(p=>{
         const ms=p.matchStats;
-        L('  '+p.name.padEnd(25)+String(ms.apps).padEnd(6)+String(ms.goals||0).padEnd(7)+String(ms.assists||0).padEnd(9)+(ms.avgRating?.toFixed(2)||'—').padEnd(11)+String(ms.motms||0));
+        L('  '+p.name.padEnd(24)+String(ms.apps).padEnd(6)+String(ms.goals||0).padEnd(5)+String(ms.assists||0).padEnd(5)+String(ms.motms||0).padEnd(6)+(ms.avgRating?.toFixed(2)||'—'));
       });
-    } else {
-      L('  No match performance data recorded yet.');
-    }
+    }else{L('  No match performance data yet.');}
+    L('');
+
+    L('ALL MATCHES:');
+    MATCHES.forEach((m,i)=>{
+      const res=m.goalsFor>m.goalsAgainst?'W':m.goalsFor===m.goalsAgainst?'D':'L';
+      L('  '+(i+1)+'. ['+res+'] '+(m.date||'?')+' | '+(m.venue||'?')+' vs '+(m.opponent||'?')+
+        ' | '+(m.goalsFor??0)+'-'+(m.goalsAgainst??0)+' | '+(m.formation||'?')+' | '+(m.competition||''));
+    });
     L('');
   }
 
-  // ── TRANSFERS ──
+  // ── SECTION 5: TRANSFERS ──
   if(TRANSFERS.length){
     HR();L('SECTION 5: TRANSFER ACTIVITY');HR();
     const ins=TRANSFERS.filter(t=>t.dir==='in');
     const outs=TRANSFERS.filter(t=>t.dir==='out');
     const spent=ins.reduce((a,t)=>a+(parseFloat(t.fee)||0),0);
     const received=outs.reduce((a,t)=>a+(parseFloat(t.fee)||0),0);
-    L('Transfers In: '+ins.length+' | Spent: £'+spent.toFixed(1)+'M');
-    L('Transfers Out: '+outs.length+' | Received: £'+received.toFixed(1)+'M');
-    L('Net Spend: £'+(spent-received).toFixed(1)+'M');
+    L('In: '+ins.length+' signings | Spent: £'+spent.toFixed(1)+'M');
+    L('Out: '+outs.length+' departed | Received: £'+received.toFixed(1)+'M');
+    L('Net Spend: £'+(spent-received>=0?'+':'')+(spent-received).toFixed(1)+'M');
     L('');
-    if(ins.length){L('TRANSFERS IN:');ins.forEach(t=>L('  '+t.name+' ('+t.position+') from '+(t.club||'?')+' — '+fmtFee(t.fee)));}
+    if(ins.length){L('SIGNINGS:');ins.forEach(t=>L('  + '+t.name+' ('+t.position+') from '+(t.club||'?')+' — '+fmtFee(t.fee)+(t.date?' on '+t.date:'')));}
     L('');
-    if(outs.length){L('TRANSFERS OUT:');outs.forEach(t=>L('  '+t.name+' ('+t.position+') to '+(t.club||'?')+' — '+fmtFee(t.fee)));}
+    if(outs.length){L('DEPARTURES:');outs.forEach(t=>L('  - '+t.name+' ('+t.position+') to '+(t.club||'?')+' — '+fmtFee(t.fee)+(t.date?' on '+t.date:'')));}
     L('');
   }
 
-  HR();L('END OF REPORT');HR();
-  document.getElementById('textReport').value=lines.join('\n');
-  document.getElementById('textReport').style.height='auto';
-  document.getElementById('textReport').style.height=Math.min(document.getElementById('textReport').scrollHeight,600)+'px';
+  HR();L('END OF REPORT — AWAITING AI ANALYSIS');HR();
+  const ta=document.getElementById('textReport');
+  ta.value=lines.join('\n');
+  ta.style.height='auto';
+  ta.style.height=Math.min(ta.scrollHeight,600)+'px';
 }
 
 // ── Copy to clipboard ──────────────────────────────────────────────────────────
@@ -450,7 +502,7 @@ function buildPrintArea(){
   p1.innerHTML+=`<div class="pr-header"><div><div class="pr-title">EAFC 26 — Squad Report</div><div class="pr-sub">Career Mode Analysis</div></div><div class="pr-meta">Generated: ${now}</div></div>`;
 
   // Summary grid
-  const avgOVR=FIRST.length?Math.round(FIRST.map(getOVR).reduce((a,b)=>a+b,0)/FIRST.length):0;
+  const avgOVR=FIRST.length?Math.round(FIRST.map(calcOVR).reduce((a,b)=>a+b,0)/FIRST.length):0;
   p1.innerHTML+=`<div class="pr-section"><div class="pr-section-title">Season Summary</div><div class="pr-summary-grid"><div class="pr-summary-cell"><div class="pr-summary-v">${wins}</div><div class="pr-summary-l">Wins</div></div><div class="pr-summary-cell"><div class="pr-summary-v">${draws}</div><div class="pr-summary-l">Draws</div></div><div class="pr-summary-cell"><div class="pr-summary-v">${losses}</div><div class="pr-summary-l">Losses</div></div><div class="pr-summary-cell"><div class="pr-summary-v">${gf}</div><div class="pr-summary-l">Goals For</div></div><div class="pr-summary-cell"><div class="pr-summary-v">${ga}</div><div class="pr-summary-l">Goals Ag.</div></div></div></div>`;
 
   // Formation analysis
