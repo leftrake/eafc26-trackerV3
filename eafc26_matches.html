@@ -18,8 +18,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 ::selection{background:var(--blue);color:#fff}
 ::-webkit-scrollbar{width:3px;height:3px}
 ::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:2px}
-.shell{max-width:1000px;margin:0 auto;padding:22px 16px 80px}
-.topnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:10px}
+.shell{max-width:min(97vw,1440px);margin:0 auto;padding:0 24px 80px}
+.topnav{position:sticky;top:0;z-index:100;background:rgba(11,13,19,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:24px;flex-wrap:wrap;gap:10px}
 .logo{display:flex;align-items:center;gap:10px}
 .logo-mark{width:28px;height:28px;border-radius:8px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
 .logo-text{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2)}
@@ -184,6 +184,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* Toast */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border3);color:var(--text);padding:10px 22px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 .toast.show{opacity:1}
+/* Detail 2-col layout */
+.detail-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+@media(max-width:760px){.detail-2col{grid-template-columns:1fr}}
 @media(max-width:520px){.sum-strip{grid-template-columns:repeat(3,1fr)}.sum-cell:nth-child(n+4){border-top:1px solid var(--border)}}
 </style>
 </head>
@@ -358,6 +361,11 @@ function buildDetail(){
   app(actBtns,editBtn,del);
   app(bbar,back,actBtns);wrap.appendChild(bbar);
 
+  // 2-col layout: left=hero+pitch, right=stats+notes
+  const twoCol=mk('div','detail-2col');
+  const leftCol=mk('div');
+  const rightCol=mk('div');
+
   // Hero
   const hero=mk('div','res-hero');
   hero.style.setProperty('--gc',col);
@@ -366,7 +374,7 @@ function buildDetail(){
   const tags=mk('div','res-tags');
   [m.date,m.competition,m.venue,m.formation].filter(Boolean).forEach(t=>tags.appendChild(mk('div','res-tag',t)));
   app(hero,sc,vs,tags);
-  wrap.appendChild(hero);
+  leftCol.appendChild(hero);
 
   // Pitch
   if((m.xi||[]).filter(Boolean).length){
@@ -375,11 +383,11 @@ function buildDetail(){
     ph.appendChild(mk('div','card-lbl','Starting XI'));
     ph.appendChild(css(mk('span','',m.formation||''),{fontSize:'11px',fontFamily:"'DM Mono',monospace",color:'var(--text3)'}));
     pw.appendChild(ph);
-    pw.appendChild(buildRoPitch(m,280));
-    wrap.appendChild(pw);
+    pw.appendChild(buildRoPitch(m,320));
+    leftCol.appendChild(pw);
   }
 
-  // Player stats
+  // Player stats (right col)
   const allIds=[...(m.xi||[]).filter(Boolean).map(s=>s.playerId),...(m.subs||[]).map(s=>s.playerId)];
   if(allIds.length){
     const sc2=mk('div','card');
@@ -410,10 +418,13 @@ function buildDetail(){
       app(tr,tdN,ntd(ps.minutes??90),ntd(ps.goals??0,(ps.goals??0)>0?'#22c55e':null),ntd(ps.assists??0,(ps.assists??0)>0?'#3d7eff':null),rtd,ctd,mtd);
       tbody.appendChild(tr);
     });
-    tbl.appendChild(tbody);sc2.appendChild(tbl);wrap.appendChild(sc2);
+    tbl.appendChild(tbody);sc2.appendChild(tbl);rightCol.appendChild(sc2);
   }
 
-  if(m.notes){const nc=mk('div','card');nc.appendChild(mk('div','card-lbl','Notes'));const nt=css(mk('div','',m.notes),{fontSize:'13px',color:'var(--text2)',lineHeight:'1.7'});nc.appendChild(nt);wrap.appendChild(nc);}
+  if(m.notes){const nc=mk('div','card');nc.appendChild(mk('div','card-lbl','Notes'));const nt=css(mk('div','',m.notes),{fontSize:'13px',color:'var(--text2)',lineHeight:'1.7'});nc.appendChild(nt);rightCol.appendChild(nc);}
+
+  app(twoCol,leftCol,rightCol);
+  wrap.appendChild(twoCol);
   return wrap;
 }
 
