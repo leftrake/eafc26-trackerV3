@@ -634,7 +634,7 @@ function openModal(existingMatch){
 
   function buildBench(){
     const usedAll=new Set([...(draft.xi||[]).filter(Boolean).map(s=>s.playerId),...(draft.subs||[]).map(s=>s.playerId)]);
-    const avail=SQUAD.filter(p=>!usedAll.has(p.id)).sort((a,b)=>calcOVR(b)-calcOVR(a));
+    const avail=SQUAD.filter(p=>!usedAll.has(p.id)&&!p.onLoan).sort((a,b)=>calcOVR(b)-calcOVR(a));
     const wrap=mk('div','bench-wrap');
     wrap.appendChild(mk('div','bench-lbl','Available — drag to pitch or tap when a slot is selected'));
     const row=mk('div','bench-scroll');
@@ -749,7 +749,7 @@ function openModal(existingMatch){
     function rebuild(){
       grid.innerHTML='';
       const q=pickerQ.toLowerCase();
-      let pls=[...SQUAD].sort((a,b)=>calcOVR(b)-calcOVR(a));
+      let pls=[...SQUAD].filter(p=>!p.onLoan).sort((a,b)=>calcOVR(b)-calcOVR(a));
       if(q)pls=pls.filter(p=>(p.name||'').toLowerCase().includes(q));
       if(!pls.length){grid.appendChild(css(mk('div','','No players found'),{color:'var(--text3)',fontSize:'13px',padding:'16px',textAlign:'center',gridColumn:'1/-1'}));return;}
       pls.forEach(p=>{
