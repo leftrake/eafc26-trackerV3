@@ -1325,7 +1325,14 @@ function buildDetail(){
     btn('Edit Loan','btn sm',()=>{S.modal='loan';R();}),
     btn('Edit','btn sm',()=>{S.modal='edit';R();})
   ];
-  if(!isFirst)rightBtns.unshift(btn('Promote ↑','btn sm green-btn',()=>{if(confirm('Move '+p.name+' to First Team?')){p.squad='first';p.potLow=undefined;p.potHigh=undefined;save();showToast(p.name+' promoted!');S.tab='first';S.view='list';R();}}));
+  if(!isFirst)rightBtns.unshift(btn('Promote ↑','btn sm green-btn',()=>{
+    if(!confirm('Move '+p.name+' to First Team?'))return;
+    const wageStr=prompt('Enter weekly wage for '+p.name+' (£/week):',(p.wage||''));
+    const wage=parseInt((wageStr||'').replace(/[^0-9]/g,''));
+    p.squad='first';p.potLow=undefined;p.potHigh=undefined;
+    if(wage>0)p.wage=wage;
+    save();showToast(p.name+' promoted to First Team!','#22c55e');S.tab='first';S.view='list';R();
+  }));
   wrap.appendChild(d('app-header',[
     h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},[btn('← Back','btn ghost',()=>{S.view='list';R();}),h('span',{style:{fontSize:'16px',fontWeight:'600'}},[p.name||'Player'])]),
     h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap',alignItems:'center'}},[
