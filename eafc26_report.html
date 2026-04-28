@@ -318,7 +318,7 @@ function buildTextReport(){
 
   // Position depth
   L('POSITION DEPTH:');
-  const posOrder=['GK','CB','LB','RB','CDM','CM','CAM','LM','LW','RW','ST','CF'];
+  const posOrder=['GK','CB','LB','RB','LWB','RWB','CDM','CM','CAM','LM','RM','LW','RW','ST','CF'];
   posOrder.forEach(pos=>{
     const players=FIRST.filter(p=>p.position===pos);
     if(!players.length)return;

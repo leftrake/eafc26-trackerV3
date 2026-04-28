@@ -4,9 +4,12 @@ const OVR_W={
   CB: {"Heading Accuracy":11,"Short Passing":6,"Ball Control":5,"Acceleration":6,"Sprint Speed":3,"Jumping":4,"Strength":11,"Def Awareness":15,"Stand Tackle":18,"Slide Tackle":11,"Aggression":8,"Interceptions":14,"Reactions":6},
   LB: {"Crossing":10,"Finishing":5,"Heading Accuracy":5,"Short Passing":8,"Ball Control":8,"Acceleration":6,"Sprint Speed":8,"Reactions":6,"Stamina":9,"Def Awareness":9,"Stand Tackle":12,"Slide Tackle":15,"Interceptions":12},
   RB: {"Crossing":10,"Finishing":5,"Heading Accuracy":5,"Short Passing":8,"Ball Control":8,"Acceleration":6,"Sprint Speed":8,"Reactions":6,"Stamina":9,"Def Awareness":9,"Stand Tackle":12,"Slide Tackle":15,"Interceptions":12},
+  LWB:{"Crossing":14,"Dribbling":8,"Short Passing":8,"Ball Control":8,"Acceleration":7,"Sprint Speed":8,"Reactions":6,"Stamina":10,"Def Awareness":8,"Stand Tackle":10,"Slide Tackle":12,"Interceptions":10,"Vision":6},
+  RWB:{"Crossing":14,"Dribbling":8,"Short Passing":8,"Ball Control":8,"Acceleration":7,"Sprint Speed":8,"Reactions":6,"Stamina":10,"Def Awareness":8,"Stand Tackle":10,"Slide Tackle":12,"Interceptions":10,"Vision":6},
   CDM:{"Short Passing":15,"Ball Control":11,"Reactions":8,"Stamina":7,"Strength":5,"Def Awareness":10,"Stand Tackle":13,"Slide Tackle":6,"Aggression":6,"Interceptions":15,"Long Passing":11,"Vision":5},
   CM: {"Finishing":3,"Short Passing":18,"Dribbling":8,"Ball Control":15,"Reactions":9,"Stamina":7,"Long Shots":5,"Stand Tackle":6,"Interceptions":6,"Positioning":7,"Long Passing":14,"Vision":5},
   LM: {"Crossing":11,"Finishing":7,"Short Passing":12,"Dribbling":16,"Ball Control":14,"Acceleration":8,"Sprint Speed":7,"Reactions":8,"Stamina":6,"Interceptions":6,"Positioning":7,"Long Passing":6,"Vision":14},
+  RM: {"Crossing":11,"Finishing":7,"Short Passing":12,"Dribbling":16,"Ball Control":14,"Acceleration":8,"Sprint Speed":7,"Reactions":8,"Stamina":6,"Interceptions":6,"Positioning":7,"Long Passing":6,"Vision":14},
   LW: {"Crossing":11,"Finishing":7,"Short Passing":12,"Dribbling":16,"Ball Control":14,"Acceleration":8,"Sprint Speed":7,"Reactions":8,"Stamina":6,"Interceptions":6,"Positioning":7,"Long Passing":6,"Vision":14},
   RW: {"Crossing":10,"Finishing":11,"Short Passing":10,"Dribbling":17,"Ball Control":15,"Acceleration":8,"Sprint Speed":7,"Agility":4,"Reactions":8,"Long Shots":5,"Positioning":10,"Vision":15},
   CAM:{"Finishing":8,"Short Passing":17,"Dribbling":14,"Ball Control":16,"Acceleration":5,"Sprint Speed":4,"Agility":4,"Reactions":8,"Long Shots":6,"Positioning":9,"Long Passing":5,"Vision":8},
@@ -35,8 +38,8 @@ function fmtDate(d){if(!d)return'—';const dt=new Date(d+'T00:00:00');return dt
 function fmtShort(d){if(!d)return'—';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
 
 // ── Position constants ────────────────────────────────────────────────────────
-const POSITIONS=['GK','CB','LB','RB','CDM','CM','CAM','LM','RW','LW','ST','CF'];
-const PC={GK:'#f59e0b',CB:'#3b82f6',LB:'#3b82f6',RB:'#3b82f6',CDM:'#10b981',CM:'#10b981',CAM:'#10b981',LM:'#ef4444',RW:'#ef4444',LW:'#ef4444',ST:'#ef4444',CF:'#ef4444'};
+const POSITIONS=['GK','CB','LB','RB','LWB','RWB','CDM','CM','CAM','LM','RM','RW','LW','ST','CF'];
+const PC={GK:'#f59e0b',CB:'#3b82f6',LB:'#3b82f6',RB:'#3b82f6',LWB:'#3b82f6',RWB:'#3b82f6',CDM:'#10b981',CM:'#10b981',CAM:'#10b981',LM:'#ef4444',RM:'#ef4444',RW:'#ef4444',LW:'#ef4444',ST:'#ef4444',CF:'#ef4444'};
 
 // ── Rating colour (green ≥8, blue ≥7, amber ≥6, red <6) ──────────────────────
 function rcol(r){const v=parseFloat(r);if(!v)return'var(--text2)';if(v>=8)return'#22c55e';if(v>=7)return'#3d7eff';if(v>=6)return'#f59e0b';return'#ef4444';}

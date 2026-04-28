@@ -661,9 +661,9 @@ function buildPositional(){
   // Group players by position
   const POS_GROUPS=[
     {label:'Goalkeeper',positions:['GK']},
-    {label:'Defenders',positions:['CB','LB','RB']},
+    {label:'Defenders',positions:['CB','LB','RB','LWB','RWB']},
     {label:'Midfielders',positions:['CDM','CM','CAM']},
-    {label:'Wingers',positions:['LM','LW','RW']},
+    {label:'Wingers',positions:['LM','RM','LW','RW']},
     {label:'Forwards',positions:['ST','CF']},
   ];
 
@@ -687,10 +687,13 @@ function buildPositional(){
       CB:['Stand Tackle','Def Awareness','Interceptions','Heading Accuracy'],
       LB:['Slide Tackle','Crossing','Sprint Speed','Stand Tackle'],
       RB:['Slide Tackle','Crossing','Sprint Speed','Stand Tackle'],
+      LWB:['Crossing','Slide Tackle','Sprint Speed','Stamina'],
+      RWB:['Crossing','Slide Tackle','Sprint Speed','Stamina'],
       CDM:['Interceptions','Stand Tackle','Short Passing','Def Awareness'],
       CM:['Short Passing','Ball Control','Long Passing','Vision'],
       CAM:['Short Passing','Ball Control','Dribbling','Vision'],
       LM:['Dribbling','Crossing','Vision','Ball Control'],
+      RM:['Dribbling','Crossing','Vision','Ball Control'],
       LW:['Dribbling','Crossing','Vision','Ball Control'],
       RW:['Dribbling','Finishing','Vision','Ball Control'],
       ST:['Positioning','Finishing','Heading Accuracy','Sprint Speed'],
