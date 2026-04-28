@@ -58,7 +58,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .hs-lbl{font-size:9px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-top:3px}
 
 /* ── Filter bar ── */
-.filter-bar{display:flex;align-items:center;gap:8px;padding:0 24px;margin-bottom:0;flex-wrap:wrap;max-width:900px;margin:0 auto 8px}
+.filter-bar{display:flex;align-items:center;gap:8px;padding:0 24px;margin-bottom:0;flex-wrap:wrap;max-width:min(97vw,1200px);margin:0 auto 8px}
 .filter-chip{padding:5px 13px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .13s}
 .filter-chip:hover{background:var(--bg3);color:var(--text)}
 .filter-chip.on{color:#fff;border-color:transparent}
@@ -69,7 +69,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .filter-chip[data-cat=milestone].on{background:rgba(192,132,252,.2);color:var(--purple);border-color:rgba(192,132,252,.3)}
 
 /* ── Timeline ── */
-.timeline{max-width:900px;margin:0 auto;padding:32px 24px 80px;position:relative}
+.timeline{max-width:min(97vw,1200px);margin:0 auto;padding:32px 24px 80px;position:relative}
 
 /* The spine */
 .timeline::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,transparent,var(--border2) 60px,var(--border2) calc(100% - 60px),transparent);transform:translateX(-50%);pointer-events:none}
@@ -129,7 +129,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .tl-card.highlight .tl-headline{color:var(--gold2)}
 
 /* Snapshot / top performers */
-.snapshot{max-width:900px;margin:0 auto 4px;padding:0 24px}
+.snapshot{max-width:min(97vw,1200px);margin:0 auto 4px;padding:0 24px}
 .snap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:16px}
 .snap-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;transition:border-color .18s}
 .snap-card:hover{border-color:var(--border2)}
@@ -150,7 +150,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .form-dot.L{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.25)}
 
 /* OVR Progression chart */
-.ovr-section{max-width:900px;margin:0 auto 4px;padding:0 24px}
+.ovr-section{max-width:min(97vw,1200px);margin:0 auto 4px;padding:0 24px}
 .ovr-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 20px}
 .ovr-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap}
 .ovr-card-title{font-family:'DM Serif Display',serif;font-size:15px;color:var(--text)}

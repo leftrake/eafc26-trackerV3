@@ -10,10 +10,14 @@
 :root{--bg:#0b0d13;--bg2:#111418;--bg3:#181c24;--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.13);--text:#dde1ec;--text2:#7c8494;--text3:#4a5062;--blue:#3d7eff;--green:#22c55e;--amber:#f59e0b;--red:#ef4444}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;background-image:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(61,126,255,.08) 0%,transparent 70%)}
-.shell{max-width:900px;margin:0 auto;padding:24px 16px 60px}
-.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:10px}
+.shell{max-width:min(97vw,1440px);margin:0 auto;padding:0 24px 60px}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(11,13,19,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:24px;flex-wrap:wrap;gap:10px}
 .logo{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2)}
 .logo b{color:var(--text)}
+.nav-links{display:flex;gap:4px;flex-wrap:wrap}
+.nav-link{padding:5px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.13);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:500;text-decoration:none;transition:all .14s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.nav-link:hover{background:#1f2430;color:var(--text)}
+.nav-link.active{background:linear-gradient(135deg,rgba(61,126,255,.12),#1f2430);color:var(--text);border-color:rgba(61,126,255,.3)}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 .btn{padding:8px 16px;border-radius:9px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
 .btn:hover{background:#1f2430}
@@ -116,14 +120,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <body>
 <div class="shell">
   <div class="topbar no-print">
-    <div class="logo"><b>EAFC 26</b> · SQUAD REPORT</div>
+    <div style="display:flex;align-items:center;gap:14px;flex:1;flex-wrap:wrap">
+      <div class="logo"><b>EAFC 26</b> · SQUAD REPORT</div>
+      <div class="nav-links">
+        <a href="eafc26_tracker_v12.html" class="nav-link">⚽ Squad</a>
+        <a href="eafc26_matches.html" class="nav-link">🏆 Matches</a>
+        <a href="eafc26_calendar.html" class="nav-link">📅 Calendar</a>
+        <a href="eafc26_history.html" class="nav-link">📜 History</a>
+      </div>
+    </div>
     <div class="actions">
-      <a href="eafc26_tracker_v12.html" class="btn">← Squad</a>
       <button class="btn green" onclick="copyReport()">📋 Copy for AI</button>
       <button class="btn pri" onclick="window.print()">⬇ Export PDF</button>
     </div>
-    <a href="eafc26_history.html" class="btn">📜 History</a>
-    </div>
+  </div>
 
   <div class="nav-tabs no-print">
     <button class="nav-tab on" onclick="switchTab('preview')">Preview</button>

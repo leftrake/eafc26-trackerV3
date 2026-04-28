@@ -35,12 +35,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px}
 
 /* Layout */
-.shell{max-width:900px;margin:0 auto;padding:24px 16px 60px}
+.shell{max-width:min(97vw,1440px);margin:0 auto;padding:24px 24px 60px}
 
 /* Header */
-.app-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:10px}
-.app-title{font-size:11px;font-weight:500;letter-spacing:2px;color:var(--text3);text-transform:uppercase}
+.app-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:10px;padding:12px 0;border-bottom:1px solid var(--border)}
+.app-title{font-size:11px;font-weight:600;letter-spacing:2px;color:var(--text3);text-transform:uppercase}
 .app-title span{color:var(--accent);margin-right:6px}
+.nav-links{display:flex;gap:4px;flex-wrap:wrap}
+.nav-link{padding:5px 12px;border-radius:7px;border:1px solid var(--border2);background:var(--bg2);color:var(--text2);font-size:12px;font-weight:500;text-decoration:none;transition:all .14s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.nav-link:hover{background:var(--bg3);color:var(--text)}
+.nav-link.active{background:linear-gradient(135deg,rgba(61,126,255,.12),var(--bg4));color:var(--text);border-color:rgba(61,126,255,.3)}
 
 /* Tab bar */
 .tab-bar{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:3px;gap:2px;margin-bottom:20px}
@@ -48,7 +52,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .tab-btn.on{background:linear-gradient(180deg,rgba(61,126,255,.12),var(--bg4));color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.4),inset 0 1px 0 rgba(61,126,255,.2)}
 
 /* Metrics strip */
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px}
 .met{background:linear-gradient(160deg,var(--bg3),var(--bg2));border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .met-l{font-size:10px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
 .met-v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-0.5px}
@@ -291,11 +295,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .cmp-banner{background:linear-gradient(135deg,rgba(61,126,255,.06),rgba(61,126,255,.02));border:1px solid rgba(61,126,255,.25);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:13px;color:var(--text2)}
 .cmp-adv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:8px;margin-top:4px}
 
+@media(max-width:900px){.metrics{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:500px){
   .metrics{grid-template-columns:1fr 1fr}
   .detail-info-grid{grid-template-columns:1fr 1fr}
   .season-grid{grid-template-columns:repeat(3,1fr)}
 }
+
+/* 2-col list layout with sidebar */
+.list-2col{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start}
+@media(max-width:960px){.list-2col{grid-template-columns:1fr}}
+.list-sidebar{display:flex;flex-direction:column;gap:10px}
+.sb-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.sb-title{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:11px}
+.sb-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)}
+.sb-row:last-child{border-bottom:none}
+.sb-depth-row{display:flex;align-items:center;gap:8px;padding:4px 0}
 </style>
 </head>
 <body>
@@ -504,20 +519,24 @@ function buildList(){
   const avgOVR=players.length?Math.round(players.map(calcOVR).reduce((a,b)=>a+b,0)/players.length):0;
   const wages=players.reduce((a,p)=>a+(parseInt(p.wage)||0),0);
   const injured=players.filter(p=>p.status==='Injured').length;
+  const topOVR=players.length?Math.max(...players.map(calcOVR)):0;
+  const totalVal=players.reduce((a,p)=>a+(parseInt(p.value)||0),0);
   const wrap=d('');
   // Header
   wrap.appendChild(d('app-header',[
-    h('div',{style:{display:'flex',alignItems:'center',gap:'12px'}},[
+    h('div',{style:{display:'flex',alignItems:'center',gap:'14px',flexWrap:'wrap',flex:'1'}},[
       h('div',{class:'app-title'},[h('span',{},[' ◆']),'EAFC 26  SQUAD TRACKER']),
-      h('a',{href:'eafc26_matches.html',style:{padding:'5px 12px',borderRadius:'7px',border:'1px solid var(--border2)',background:'var(--bg3)',color:'var(--text2)',fontSize:'12px',fontWeight:'500',textDecoration:'none',transition:'all .15s',display:'inline-flex',alignItems:'center',gap:'5px',whiteSpace:'nowrap'},onMouseenter:e=>{e.target.style.background='var(--bg4)';e.target.style.color='var(--text)';},onMouseleave:e=>{e.target.style.background='var(--bg3)';e.target.style.color='var(--text2)';}},['⚽ Matches']),
-      h('a',{href:'eafc26_calendar.html',style:{padding:'5px 12px',borderRadius:'7px',border:'1px solid var(--border2)',background:'var(--bg3)',color:'var(--text2)',fontSize:'12px',fontWeight:'500',textDecoration:'none',display:'inline-flex',alignItems:'center',gap:'5px',whiteSpace:'nowrap'},onMouseenter:e=>{e.target.style.background='var(--bg4)';e.target.style.color='var(--text)';},onMouseleave:e=>{e.target.style.background='var(--bg3)';e.target.style.color='var(--text2)';}},['📅 Calendar']),
-      h('a',{href:'eafc26_report.html',style:{padding:'5px 12px',borderRadius:'7px',border:'1px solid var(--border2)',background:'var(--bg3)',color:'var(--text2)',fontSize:'12px',fontWeight:'500',textDecoration:'none',transition:'all .15s',display:'inline-flex',alignItems:'center',gap:'5px',whiteSpace:'nowrap'},onMouseenter:e=>{e.target.style.background='var(--bg4)';e.target.style.color='var(--text)';},onMouseleave:e=>{e.target.style.background='var(--bg3)';e.target.style.color='var(--text2)';}},['📋 Report']),
-      h('a',{href:'eafc26_history.html',style:{padding:'5px 12px',borderRadius:'7px',border:'1px solid var(--border2)',background:'var(--bg3)',color:'var(--text2)',fontSize:'12px',fontWeight:'500',textDecoration:'none',display:'inline-flex',alignItems:'center',gap:'5px',whiteSpace:'nowrap'},onMouseenter:e=>{e.target.style.background='var(--bg4)';e.target.style.color='var(--text)';},onMouseleave:e=>{e.target.style.background='var(--bg3)';e.target.style.color='var(--text2)';}},['📜 History'])
+      h('div',{class:'nav-links'},[
+        h('a',{href:'eafc26_matches.html',class:'nav-link'},['⚽ Matches']),
+        h('a',{href:'eafc26_calendar.html',class:'nav-link'},['📅 Calendar']),
+        h('a',{href:'eafc26_report.html',class:'nav-link'},['📋 Report']),
+        h('a',{href:'eafc26_history.html',class:'nav-link'},['📜 History'])
+      ])
     ]),
     h('div',{style:{display:'flex',gap:'8px',flexWrap:'wrap'}},[
       btn(S.cmpMode?'Cancel':'Compare','btn sm',()=>{S.cmpMode=!S.cmpMode;S.cmpSel=[];R();}),
-      btn('⬇ Export Save','btn sm',exportData),
-      h('label',{class:'btn sm',style:{cursor:'pointer'},onClick:()=>document.getElementById('importFile').click()},['⬆ Import Save']),
+      btn('⬇ Export','btn sm',exportData),
+      h('label',{class:'btn sm',style:{cursor:'pointer'},onClick:()=>document.getElementById('importFile').click()},['⬆ Import']),
       btn('+ Add Player','btn pri',()=>{S.modal='add';R();})
     ])
   ]));
@@ -528,12 +547,14 @@ function buildList(){
     h('button',{class:'tab-btn'+(S.view==='positional'?' on':''),onClick:()=>{S.view='positional';S.cmpMode=false;R();}},[' Rankings']),
     h('button',{class:'tab-btn'+(S.view==='transfers'?' on':''),onClick:()=>{S.view='transfers';S.cmpMode=false;R();}},[' Transfers'])
   ]));
-  // Metrics
+  // Metrics (6-col)
   wrap.appendChild(d('metrics',[
     metCard('Players',players.length),
     metCard('Avg OVR',avgOVR||'—'),
+    metCard('Top OVR',topOVR||'—','#f59e0b'),
     isFirst?metCard('Injured',injured,injured?'#ef4444':null):metCard('High Pot',players.filter(p=>(p.potHigh||0)>=80).length,'#22c55e'),
-    metCard('Wages','£'+wages.toLocaleString()+'/w')
+    metCard('Wages','£'+wages.toLocaleString()+'/w'),
+    isFirst?metCard('Squad Value',fmtVal(totalVal)):metCard('Academy',players.length)
   ]));
   // CMP banner
   if(S.cmpMode){
@@ -609,9 +630,87 @@ function buildList(){
     ]);
     card.appendChild(row);
   });
-  wrap.appendChild(card);
+  if(!S.cmpMode){
+    const twoCol=d('list-2col');
+    const mainCol=d('');mainCol.appendChild(card);
+    twoCol.appendChild(mainCol);
+    twoCol.appendChild(buildSidebar(players,isFirst));
+    wrap.appendChild(twoCol);
+  } else {
+    wrap.appendChild(card);
+  }
   return wrap;
 }
+
+function buildSidebar(players,isFirst){
+  const sb=d('list-sidebar');
+  // Position depth
+  const PG=[
+    {lbl:'GK',pos:['GK'],col:'#f59e0b'},
+    {lbl:'DEF',pos:['CB','LB','RB','LWB','RWB'],col:'#3b82f6'},
+    {lbl:'MID',pos:['CDM','CM','CAM'],col:'#10b981'},
+    {lbl:'WNG',pos:['LM','RM','LW','RW'],col:'#ef4444'},
+    {lbl:'FWD',pos:['ST','CF'],col:'#ef4444'},
+  ];
+  const depthCard=d('sb-card');
+  depthCard.appendChild(d('sb-title',['Position Depth']));
+  PG.forEach(g=>{
+    const cnt=players.filter(p=>g.pos.includes(p.position)).length;
+    if(!cnt)return;
+    const pct=Math.min(100,cnt/5*100);
+    const row=d('sb-depth-row',[
+      h('span',{style:{fontSize:'11px',fontWeight:'700',color:g.col,width:'34px',flexShrink:'0'}},[g.lbl]),
+      h('div',{style:{flex:'1',height:'6px',background:'var(--bg4)',borderRadius:'3px',overflow:'hidden'}},[
+        h('div',{style:{width:pct+'%',height:'100%',background:g.col,borderRadius:'3px',opacity:'.75'}})
+      ]),
+      h('span',{style:{fontSize:'12px',fontWeight:'600',fontFamily:"'DM Mono',monospace",width:'16px',textAlign:'right',color:'var(--text2)',flexShrink:'0'}},[String(cnt)])
+    ]);
+    depthCard.appendChild(row);
+  });
+  sb.appendChild(depthCard);
+  // Alerts
+  const alerts=isFirst?players.filter(p=>p.status==='Injured'||p.status==='Suspended'):[];
+  if(alerts.length){
+    const alertCard=d('sb-card');
+    alertCard.appendChild(d('sb-title',['Squad Alerts']));
+    alerts.forEach(p=>{
+      const isInj=p.status==='Injured';
+      const alertRow=h('div',{class:'sb-row'},[
+        h('div',{style:{width:'7px',height:'7px',borderRadius:'50%',background:isInj?'var(--red)':'var(--amber)',flexShrink:'0'}}),
+        h('div',{style:{flex:'1',fontSize:'12px',fontWeight:'500',minWidth:'0',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}},[p.name]),
+        h('span',{style:{fontSize:'10px',color:isInj?'var(--red)':'var(--amber)',fontWeight:'700',flexShrink:'0'}},[isInj?'INJ':'SUS'])
+      ]);
+      alertCard.appendChild(alertRow);
+    });
+    sb.appendChild(alertCard);
+  }
+  // Top players
+  const sortedTop=isFirst
+    ?[...players].sort((a,b)=>calcOVR(b)-calcOVR(a)).slice(0,6)
+    :[...players].sort((a,b)=>(((b.potLow||0)+(b.potHigh||0))/2)-(((a.potLow||0)+(a.potHigh||0))/2)).slice(0,6);
+  if(sortedTop.length){
+    const topCard=d('sb-card');
+    topCard.appendChild(d('sb-title',[isFirst?'Top Players by OVR':'Top Prospects']));
+    sortedTop.forEach((p,i)=>{
+      const ovr=calcOVR(p);
+      const pc2=PC[p.position]||'#6b7280';
+      const numCol=i===0?'#f59e0b':i===1?'#94a3b8':i===2?'#b45309':'var(--text3)';
+      const topRow=h('div',{class:'sb-row',style:{cursor:'pointer'},onClick:()=>{S.sel=p.id;S.view='detail';R();}},[
+        h('span',{style:{fontSize:'11px',fontWeight:'700',fontFamily:"'DM Mono',monospace",color:numCol,width:'16px',flexShrink:'0'}},[String(i+1)]),
+        h('div',{style:{width:'24px',height:'24px',borderRadius:'50%',background:avc(p.name)+'22',color:avc(p.name),display:'flex',alignItems:'center',justifyContent:'center',fontSize:'9px',fontWeight:'700',flexShrink:'0'}},[ini(p.name)]),
+        h('div',{style:{flex:'1',minWidth:'0'}},[
+          h('div',{style:{fontSize:'12px',fontWeight:'500',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}},[p.name]),
+          h('span',{style:{fontSize:'10px',padding:'0 5px',borderRadius:'3px',background:pc2+'22',color:pc2,fontWeight:'600'}},[p.position||'?'])
+        ]),
+        h('div',{style:{fontSize:'14px',fontWeight:'700',fontFamily:"'DM Mono',monospace",color:'var(--accent)',flexShrink:'0'}},[String(ovr||'—')])
+      ]);
+      topCard.appendChild(topRow);
+    });
+    sb.appendChild(topCard);
+  }
+  return sb;
+}
+
 function metCard(l,v,col){const mv=d('met-v',[String(v)]);if(col)mv.style.color=col;return d('met',[d('met-l',[l]),mv]);}
 
 // ─── POSITIONAL RANKINGS VIEW ─────────────────────────────────────────────────
@@ -622,11 +721,14 @@ function buildPositional(){
   const wrap=d('');
   // Header — reuse same app-header pattern as other views
   wrap.appendChild(d('app-header',[
-    h('div',{style:{display:'flex',alignItems:'center',gap:'12px'}},[
+    h('div',{style:{display:'flex',alignItems:'center',gap:'14px',flexWrap:'wrap',flex:'1'}},[
       h('div',{class:'app-title'},[h('span',{},[' ◆']),'EAFC 26  SQUAD TRACKER']),
-      h('a',{href:'eafc26_matches.html',style:{padding:'5px 12px',borderRadius:'7px',border:'1px solid var(--border2)',background:'var(--bg3)',color:'var(--text2)',fontSize:'12px',fontWeight:'500',textDecoration:'none',display:'inline-flex',alignItems:'center',whiteSpace:'nowrap'},onMouseenter:e=>{e.target.style.background='var(--bg4)';e.target.style.color='var(--text)';},onMouseleave:e=>{e.target.style.background='var(--bg3)';e.target.style.color='var(--text2)';}},['⚽ Matches']),
-      h('a',{href:'eafc26_report.html',style:{padding:'5px 12px',borderRadius:'7px',border:'1px solid var(--border2)',background:'var(--bg3)',color:'var(--text2)',fontSize:'12px',fontWeight:'500',textDecoration:'none',display:'inline-flex',alignItems:'center',whiteSpace:'nowrap'}},['📋 Report']),
-      h('a',{href:'eafc26_history.html',style:{padding:'5px 12px',borderRadius:'7px',border:'1px solid var(--border2)',background:'var(--bg3)',color:'var(--text2)',fontSize:'12px',fontWeight:'500',textDecoration:'none',display:'inline-flex',alignItems:'center',gap:'5px',whiteSpace:'nowrap'},onMouseenter:e=>{e.target.style.background='var(--bg4)';e.target.style.color='var(--text)';},onMouseleave:e=>{e.target.style.background='var(--bg3)';e.target.style.color='var(--text2)';}},['📜 History'])
+      h('div',{class:'nav-links'},[
+        h('a',{href:'eafc26_matches.html',class:'nav-link'},['⚽ Matches']),
+        h('a',{href:'eafc26_calendar.html',class:'nav-link'},['📅 Calendar']),
+        h('a',{href:'eafc26_report.html',class:'nav-link'},['📋 Report']),
+        h('a',{href:'eafc26_history.html',class:'nav-link'},['📜 History'])
+      ])
     ]),
     h('div',{style:{display:'flex',gap:'8px',flexWrap:'wrap'}},[
       btn('+ Add Player','btn pri',()=>{S.modal='add';R();})
