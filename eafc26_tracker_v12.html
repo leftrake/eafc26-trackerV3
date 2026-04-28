@@ -831,6 +831,7 @@ function buildPositional(){
       ...groupKeyStats.map(s=>h('th',{class:'c'},[s.replace('Heading Accuracy','Hdr').replace('Def Awareness','Def Awr').replace('Short Passing','S.Pass').replace('Ball Control','B.Ctrl').replace('Interceptions','Ints').replace('Positioning','Pos').replace('Sprint Speed','Spd').replace('Stand Tackle','St.Tck').replace('Slide Tackle','Sl.Tck').replace('GK Diving','Div').replace('GK Handling','Han').replace('GK Reflexes','Ref').replace('GK Positioning','GPsn')])),
       h('th',{class:'c'},['Apps']),
       h('th',{class:'c'},['Goals']),
+      h('th',{class:'c'},['Ast']),
       h('th',{class:'c'},['Rating']),
     ]));
     table.appendChild(thead);
@@ -885,6 +886,7 @@ function buildPositional(){
       // Match stats
       const appsTd=h('td',{style:{textAlign:'center',fontFamily:"'DM Mono',monospace",fontSize:'12px',fontWeight:'600',color:ms.apps?'var(--text)':'var(--text3)'}},[String(ms.apps||'—')]);
       const goalsTd=h('td',{style:{textAlign:'center',fontFamily:"'DM Mono',monospace",fontSize:'13px',fontWeight:'700',color:(ms.goals||0)>0?'#22c55e':'var(--text3)'}},[String(ms.goals||'—')]);
+      const assistsTd=h('td',{style:{textAlign:'center',fontFamily:"'DM Mono',monospace",fontSize:'13px',fontWeight:'700',color:(ms.assists||0)>0?'#3d7eff':'var(--text3)'}},[String(ms.assists||'—')]);
       const ratingTd=h('td',{style:{textAlign:'center'}});
       if(ms.avgRating){
         ratingTd.appendChild(h('span',{class:'rank-rating',style:{background:ratingCol+'20',color:ratingCol}},[ms.avgRating.toFixed(1)]));
@@ -892,7 +894,7 @@ function buildPositional(){
         ratingTd.appendChild(h('span',{style:{color:'var(--text3)',fontSize:'12px'}},['—']));
       }
 
-      tr.appendChild(appsTd);tr.appendChild(goalsTd);tr.appendChild(ratingTd);
+      tr.appendChild(appsTd);tr.appendChild(goalsTd);tr.appendChild(assistsTd);tr.appendChild(ratingTd);
       tbody.appendChild(tr);
     });
 
