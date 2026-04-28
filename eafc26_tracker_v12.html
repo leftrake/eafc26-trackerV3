@@ -337,7 +337,7 @@ function calcOVR(p){return p.manualOVR?parseInt(p.manualOVR)||calcOVRFromStats(p
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 function sc2(v){if(v>=85)return'#22c55e';if(v>=70)return'#3d7eff';if(v>=55)return'#f59e0b';return'#ef4444';}
 function pcv(v){if(v>=90)return'#f59e0b';if(v>=80)return'#22c55e';if(v>=70)return'#3d7eff';return'#6b7280';}
-function fmtVal(v){if(!v)return'—';const n=parseInt(v);if(n>=1e6)return'£'+(n/1e6).toFixed(1)+'M';if(n>=1000)return'£'+(n/1000).toFixed(0)+'K';return'£'+n;}
+function fmtVal(v){if(!v)return'—';const n=parseInt(v);if(n>=1e6)return'$'+(n/1e6).toFixed(1)+'M';if(n>=1000)return'$'+(n/1000).toFixed(0)+'K';return'$'+n;}
 function cmToFtIn(cm){if(!cm)return'—';const ti=Math.floor(cm/2.54);return Math.floor(ti/12)+"'"+(ti%12)+'"';}
 function showToast(msg,col){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=col?col+'44':'';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 function exportData(){
@@ -553,7 +553,7 @@ function buildList(){
     metCard('Avg OVR',avgOVR||'—'),
     metCard('Top OVR',topOVR||'—','#f59e0b'),
     isFirst?metCard('Injured',injured,injured?'#ef4444':null):metCard('High Pot',players.filter(p=>(p.potHigh||0)>=80).length,'#22c55e'),
-    metCard('Wages','£'+wages.toLocaleString()+'/w'),
+    metCard('Wages','$'+wages.toLocaleString()+'/w'),
     isFirst?metCard('Squad Value',fmtVal(totalVal)):metCard('Academy',players.length)
   ]));
   // CMP banner
@@ -615,7 +615,7 @@ function buildList(){
           p.nationality?sp('','· '+p.nationality):null,
           p.status&&p.status!=='Fit'?h('span',{style:{display:'inline-flex',alignItems:'center',gap:'3px',color:stc}},[h('span',{class:'status-dot',style:{background:stc}}),p.status]):null,
           p.onLoan&&p.loanClub?h('span',{class:'loan-tag'},[p.loanClub]):null,
-          p.wage?sp('','· £'+Number(p.wage).toLocaleString()+'/w'):null,
+          p.wage?sp('','· $'+Number(p.wage).toLocaleString()+'/w'):null,
           hasStats?sp('',`· ${ms.apps}G ${ms.goals||0}⚽ ${ms.assists||0}🅰`,{fontSize:'10px',color:'var(--text3)'}):null
         ])
       ]),
@@ -831,6 +831,7 @@ function buildPositional(){
       ...groupKeyStats.map(s=>h('th',{class:'c'},[s.replace('Heading Accuracy','Hdr').replace('Def Awareness','Def Awr').replace('Short Passing','S.Pass').replace('Ball Control','B.Ctrl').replace('Interceptions','Ints').replace('Positioning','Pos').replace('Sprint Speed','Spd').replace('Stand Tackle','St.Tck').replace('Slide Tackle','Sl.Tck').replace('GK Diving','Div').replace('GK Handling','Han').replace('GK Reflexes','Ref').replace('GK Positioning','GPsn')])),
       h('th',{class:'c'},['Apps']),
       h('th',{class:'c'},['Goals']),
+      h('th',{class:'c'},['Ast']),
       h('th',{class:'c'},['Rating']),
     ]));
     table.appendChild(thead);
@@ -885,6 +886,7 @@ function buildPositional(){
       // Match stats
       const appsTd=h('td',{style:{textAlign:'center',fontFamily:"'DM Mono',monospace",fontSize:'12px',fontWeight:'600',color:ms.apps?'var(--text)':'var(--text3)'}},[String(ms.apps||'—')]);
       const goalsTd=h('td',{style:{textAlign:'center',fontFamily:"'DM Mono',monospace",fontSize:'13px',fontWeight:'700',color:(ms.goals||0)>0?'#22c55e':'var(--text3)'}},[String(ms.goals||'—')]);
+      const assistsTd=h('td',{style:{textAlign:'center',fontFamily:"'DM Mono',monospace",fontSize:'13px',fontWeight:'700',color:(ms.assists||0)>0?'#3d7eff':'var(--text3)'}},[String(ms.assists||'—')]);
       const ratingTd=h('td',{style:{textAlign:'center'}});
       if(ms.avgRating){
         ratingTd.appendChild(h('span',{class:'rank-rating',style:{background:ratingCol+'20',color:ratingCol}},[ms.avgRating.toFixed(1)]));
@@ -892,7 +894,7 @@ function buildPositional(){
         ratingTd.appendChild(h('span',{style:{color:'var(--text3)',fontSize:'12px'}},['—']));
       }
 
-      tr.appendChild(appsTd);tr.appendChild(goalsTd);tr.appendChild(ratingTd);
+      tr.appendChild(appsTd);tr.appendChild(goalsTd);tr.appendChild(assistsTd);tr.appendChild(ratingTd);
       tbody.appendChild(tr);
     });
 
@@ -1119,7 +1121,7 @@ function buildTransfers(){
     const inCard=d('card',[]);
     inCard.appendChild(d('tr-section-hd',[
       h('div',{class:'tr-section-label'},['Transfers In']),
-      h('div',{class:'tr-total',style:{color:'#22c55e'}},['£'+totalIn.toFixed(1)+'M'])
+      h('div',{class:'tr-total',style:{color:'#22c55e'}},['$'+totalIn.toFixed(1)+'M'])
     ]));
     ins.forEach((t,i)=>{
       const realIdx=TRANSFERS.indexOf(t);
@@ -1133,7 +1135,7 @@ function buildTransfers(){
     const outCard=d('card',[]);
     outCard.appendChild(d('tr-section-hd',[
       h('div',{class:'tr-section-label'},['Transfers Out']),
-      h('div',{class:'tr-total',style:{color:'#ef4444'}},['£'+totalOut.toFixed(1)+'M'])
+      h('div',{class:'tr-total',style:{color:'#ef4444'}},['$'+totalOut.toFixed(1)+'M'])
     ]));
     outs.forEach((t,i)=>{
       const realIdx=TRANSFERS.indexOf(t);
@@ -1162,7 +1164,7 @@ function trEntry(t,idx){
         t.season?h('span',{style:{color:'var(--text3)'}},[t.season]):null
       ])
     ]),
-    h('div',{class:'tr-fee',style:{color:isIn?'#ef4444':'#22c55e'}},[t.fee?'£'+parseFloat(t.fee).toFixed(1)+'M':'Free']),
+    h('div',{class:'tr-fee',style:{color:isIn?'#ef4444':'#22c55e'}},[t.fee?'$'+parseFloat(t.fee).toFixed(1)+'M':'Free']),
     ra
   ]);
   row.addEventListener('mouseenter',()=>ra.style.opacity='1');
@@ -1323,7 +1325,14 @@ function buildDetail(){
     btn('Edit Loan','btn sm',()=>{S.modal='loan';R();}),
     btn('Edit','btn sm',()=>{S.modal='edit';R();})
   ];
-  if(!isFirst)rightBtns.unshift(btn('Promote ↑','btn sm green-btn',()=>{if(confirm('Move '+p.name+' to First Team?')){p.squad='first';p.potLow=undefined;p.potHigh=undefined;save();showToast(p.name+' promoted!');S.tab='first';S.view='list';R();}}));
+  if(!isFirst)rightBtns.unshift(btn('Promote ↑','btn sm green-btn',()=>{
+    if(!confirm('Move '+p.name+' to First Team?'))return;
+    const wageStr=prompt('Enter weekly wage for '+p.name+' ($/week):',(p.wage||''));
+    const wage=parseInt((wageStr||'').replace(/[^0-9]/g,''));
+    p.squad='first';p.potLow=undefined;p.potHigh=undefined;
+    if(wage>0)p.wage=wage;
+    save();showToast(p.name+' promoted to First Team!','#22c55e');S.tab='first';S.view='list';R();
+  }));
   wrap.appendChild(d('app-header',[
     h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},[btn('← Back','btn ghost',()=>{S.view='list';R();}),h('span',{style:{fontSize:'16px',fontWeight:'600'}},[p.name||'Player'])]),
     h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap',alignItems:'center'}},[
@@ -1349,7 +1358,7 @@ function buildDetail(){
         diItem('Foot',p.foot||'—'),
         diItem('Weak Foot','★'.repeat(p.weakfoot||0)||'—'),
         diItem('Skill Moves','★'.repeat(p.skillmoves||0)||'—'),
-        p.wage?diItem('Wage','£'+Number(p.wage).toLocaleString()+'/w'):h('div'),
+        p.wage?diItem('Wage','$'+Number(p.wage).toLocaleString()+'/w'):h('div'),
         isFirst&&p.value?diItem('Value',fmtVal(p.value)):h('div'),
         isFirst&&p.contractEnd?diItem('Contract',p.contractEnd):h('div'),
         isFirst&&p.kitNumber?diItem('Kit #',p.kitNumber):h('div'),
@@ -1529,7 +1538,7 @@ function buildDrawer(){
     ]));
     body.appendChild(secL('Deal Details'));
     body.appendChild(d('fgrid t3',[
-      fg('Fee (£M)',[h('input',{type:'number',value:tf.fee,min:0,step:0.1,placeholder:'0 = Free',onInput:e=>tf.fee=e.target.value})]),
+      fg('Fee ($M)',[h('input',{type:'number',value:tf.fee,min:0,step:0.1,placeholder:'0 = Free',onInput:e=>tf.fee=e.target.value})]),
       fg('Date',[h('input',{type:'date',value:tf.date,onInput:e=>tf.date=e.target.value})]),
       fg('Season',[h('input',{type:'text',value:tf.season,placeholder:'e.g. 2025/26',onInput:e=>tf.season=e.target.value})])
     ]));
@@ -1547,10 +1556,10 @@ function buildDrawer(){
       fg('Age',[h('input',{type:'number',value:tf.age,min:14,max:45,placeholder:'e.g. 23',onInput:e=>tf.age=e.target.value})]),
       fg('Nationality',[h('input',{type:'text',value:tf.nationality,placeholder:'e.g. French',onInput:e=>tf.nationality=e.target.value})]),
       fg('Overall (OVR)',[h('input',{type:'number',value:tf.ovr,min:1,max:99,placeholder:'e.g. 87',onInput:e=>tf.ovr=e.target.value})]),
-      fg('Weekly Wage (£)',[h('input',{type:'number',value:tf.wage,placeholder:'e.g. 120000',onInput:e=>tf.wage=e.target.value})])
+      fg('Weekly Wage ($)',[h('input',{type:'number',value:tf.wage,placeholder:'e.g. 120000',onInput:e=>tf.wage=e.target.value})])
     ]));
     playerFields.appendChild(d('fgrid',[
-      fg('Market Value (£)',[h('input',{type:'number',value:tf.value,placeholder:'e.g. 85000000',onInput:e=>tf.value=e.target.value})]),
+      fg('Market Value ($)',[h('input',{type:'number',value:tf.value,placeholder:'e.g. 85000000',onInput:e=>tf.value=e.target.value})]),
       fg('Contract Until',[h('input',{type:'date',value:tf.contractEnd,onInput:e=>tf.contractEnd=e.target.value})])
     ]));
     playerFields.appendChild(d('fgrid',[
@@ -1668,7 +1677,7 @@ function buildDrawer(){
     const lFields=h('div',{style:{display:f.onLoan?'flex':'none',flexDirection:'column',gap:'10px'}},[
       fg('Loan Club',[h('input',{type:'text',value:f.loanClub,placeholder:'e.g. Feyenoord',onInput:e=>f.loanClub=e.target.value})]),
       fg('Loan Until',[h('input',{type:'date',value:f.loanEnd,onInput:e=>f.loanEnd=e.target.value})]),
-      fg('Loan Wage (£/wk)',[h('input',{type:'number',value:f.loanWage,placeholder:'Optional',onInput:e=>f.loanWage=e.target.value})])
+      fg('Loan Wage ($/wk)',[h('input',{type:'number',value:f.loanWage,placeholder:'Optional',onInput:e=>f.loanWage=e.target.value})])
     ]);
     body.appendChild(lFields);
     drawer.appendChild(body);
@@ -1686,7 +1695,7 @@ function buildDrawer(){
     let logValue=orig.value||'';
     body.appendChild(d('fgrid t3',[
       fg('Date',[h('input',{type:'date',value:f.logDate,onInput:e=>f.logDate=e.target.value})]),
-      fg('Market Value (£)',[h('input',{type:'number',value:logValue,placeholder:orig.value||'e.g. 25000000',onInput:e=>logValue=e.target.value})]),
+      fg('Market Value ($)',[h('input',{type:'number',value:logValue,placeholder:orig.value||'e.g. 25000000',onInput:e=>logValue=e.target.value})]),
       fg('Note',[h('input',{type:'text',placeholder:'e.g. Pre-season',onInput:e=>f.logNote=e.target.value})])
     ]));
     body.appendChild(secL('Attribute Upgrades'));
@@ -1716,7 +1725,7 @@ function buildDrawer(){
 
   // ── QUICK UPDATE ──
   if(isQuick){
-    body.appendChild(d('fgrid',[fg('Status',[bSel(SC.map(s=>[s,s]),f.quickStatus,v=>f.quickStatus=v)]),isFirst?fg('Market Value (£)',[h('input',{type:'number',placeholder:orig.value||'',onInput:e=>f.quickVal=e.target.value})]):null].filter(Boolean)));
+    body.appendChild(d('fgrid',[fg('Status',[bSel(SC.map(s=>[s,s]),f.quickStatus,v=>f.quickStatus=v)]),isFirst?fg('Market Value ($)',[h('input',{type:'number',placeholder:orig.value||'',onInput:e=>f.quickVal=e.target.value})]):null].filter(Boolean)));
     body.appendChild(d('fgrid full',[fg('Note',[h('input',{type:'text',placeholder:'e.g. After transfer window',onInput:e=>f.quickNote=e.target.value})])]));
     body.appendChild(h('p',{style:{fontSize:'11px',color:'var(--text3)',marginTop:'8px'}},['Saving auto-logs a progress snapshot.']));
     drawer.appendChild(body);
@@ -1747,9 +1756,9 @@ function buildDrawer(){
   body.appendChild(calcNote);
 
   body.appendChild(secL(isFirst?'Contract & Status':'Status & Loan'));
-  body.appendChild(d('fgrid',[fg('Weekly Wage (£)',[h('input',{type:'number',value:f.wage,placeholder:'50000',onInput:e=>f.wage=e.target.value})]),isFirst?fg('Market Value (£)',[h('input',{type:'number',value:f.value,placeholder:'25000000',onInput:e=>f.value=e.target.value})]):null,isFirst?fg('Contract Until',[h('input',{type:'date',value:f.contractEnd,onInput:e=>f.contractEnd=e.target.value})]):null,isFirst?fg('Kit Number',[h('input',{type:'number',value:f.kitNumber,min:1,max:99,placeholder:'9',onInput:e=>f.kitNumber=e.target.value})]):null,fg('Status',[bSel(SC.map(s=>[s,s]),f.status,v=>f.status=v)])].filter(Boolean)));
+  body.appendChild(d('fgrid',[fg('Weekly Wage ($)',[h('input',{type:'number',value:f.wage,placeholder:'50000',onInput:e=>f.wage=e.target.value})]),isFirst?fg('Market Value ($)',[h('input',{type:'number',value:f.value,placeholder:'25000000',onInput:e=>f.value=e.target.value})]):null,isFirst?fg('Contract Until',[h('input',{type:'date',value:f.contractEnd,onInput:e=>f.contractEnd=e.target.value})]):null,isFirst?fg('Kit Number',[h('input',{type:'number',value:f.kitNumber,min:1,max:99,placeholder:'9',onInput:e=>f.kitNumber=e.target.value})]):null,fg('Status',[bSel(SC.map(s=>[s,s]),f.status,v=>f.status=v)])].filter(Boolean)));
   if(!isFirst){
-    const lD=d('fgrid',[fg('Loan Club',[h('input',{type:'text',value:f.loanClub,placeholder:'e.g. Feyenoord',onInput:e=>f.loanClub=e.target.value})]),fg('Loan Until',[h('input',{type:'date',value:f.loanEnd,onInput:e=>f.loanEnd=e.target.value})]),fg('Loan Wage (£)',[h('input',{type:'number',value:f.loanWage,placeholder:'Optional',onInput:e=>f.loanWage=e.target.value})])]);
+    const lD=d('fgrid',[fg('Loan Club',[h('input',{type:'text',value:f.loanClub,placeholder:'e.g. Feyenoord',onInput:e=>f.loanClub=e.target.value})]),fg('Loan Until',[h('input',{type:'date',value:f.loanEnd,onInput:e=>f.loanEnd=e.target.value})]),fg('Loan Wage ($)',[h('input',{type:'number',value:f.loanWage,placeholder:'Optional',onInput:e=>f.loanWage=e.target.value})])]);
     lD.style.display=f.onLoan?'grid':'none';lD.style.marginTop='8px';
     const lC=h('input',{type:'checkbox',style:{width:'auto'},onChange:e=>{f.onLoan=e.target.checked;lD.style.display=f.onLoan?'grid':'none';}});
     if(f.onLoan)lC.checked=true;

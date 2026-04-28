@@ -160,7 +160,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <script>
 // ── Load data ─────────────────────────────────────────────────────────────────
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function fmtFee(m){if(!m)return'Free';const v=parseFloat(m);if(!v)return'Free';return'£'+v.toFixed(1)+'M';}
+function fmtFee(m){if(!m)return'Free';const v=parseFloat(m);if(!v)return'Free';return'$'+v.toFixed(1)+'M';}
 
 const SQUAD=loadSquad(), MATCHES=loadMatches(), TRANSFERS=loadTransfers();
 
@@ -203,7 +203,7 @@ function buildPreview(){
   const totalWages=FIRST.reduce((a,p)=>a+(parseInt(p.wage)||0),0);
   const stats=[
     ['Players',FIRST.length],['Avg OVR',avgOVR],['Academy',ACADEMY.length],
-    ['Wages','£'+totalWages.toLocaleString()+'/w'],['Matches',MATCHES.length],
+    ['Wages','$'+totalWages.toLocaleString()+'/w'],['Matches',MATCHES.length],
     ['Record',wins+'W '+draws+'D '+losses+'L']
   ];
   const sg=div('',{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'8px'});
@@ -312,7 +312,7 @@ function buildTextReport(){
   const suspended=FIRST.filter(p=>p.status==='Suspended');
   const onLoan=SQUAD.filter(p=>p.onLoan);
   L('First Team: '+FIRST.length+' players | Academy: '+ACADEMY.length+' players');
-  L('Squad Average OVR: '+avgOVR+' | Weekly Wages: £'+totalWages.toLocaleString());
+  L('Squad Average OVR: '+avgOVR+' | Weekly Wages: $'+totalWages.toLocaleString());
   if(MATCHES.length){
     const winPct=Math.round(wins/MATCHES.length*100);
     L('Match Record: '+wins+'W '+draws+'D '+losses+'L ('+winPct+'% win rate)');
@@ -354,8 +354,8 @@ function buildTextReport(){
     // Contract info — flag short contracts
     if(p.wage||p.value||p.contractEnd){
       const parts=[];
-      if(p.wage)parts.push('Wage: £'+Number(p.wage).toLocaleString()+'/w');
-      if(p.value)parts.push('Value: £'+(parseInt(p.value)/1e6).toFixed(1)+'M');
+      if(p.wage)parts.push('Wage: $'+Number(p.wage).toLocaleString()+'/w');
+      if(p.value)parts.push('Value: $'+(parseInt(p.value)/1e6).toFixed(1)+'M');
       if(p.contractEnd){
         parts.push('Contract: '+p.contractEnd);
         const yr=parseInt((p.contractEnd||'').split('/').pop()||p.contractEnd);
@@ -476,9 +476,9 @@ function buildTextReport(){
     const outs=TRANSFERS.filter(t=>t.dir==='out');
     const spent=ins.reduce((a,t)=>a+(parseFloat(t.fee)||0),0);
     const received=outs.reduce((a,t)=>a+(parseFloat(t.fee)||0),0);
-    L('In: '+ins.length+' signings | Spent: £'+spent.toFixed(1)+'M');
-    L('Out: '+outs.length+' departed | Received: £'+received.toFixed(1)+'M');
-    L('Net Spend: £'+(spent-received>=0?'+':'')+(spent-received).toFixed(1)+'M');
+    L('In: '+ins.length+' signings | Spent: $'+spent.toFixed(1)+'M');
+    L('Out: '+outs.length+' departed | Received: $'+received.toFixed(1)+'M');
+    L('Net Spend: $'+(spent-received>=0?'+':'')+(spent-received).toFixed(1)+'M');
     L('');
     if(ins.length){L('SIGNINGS:');ins.forEach(t=>L('  + '+t.name+' ('+t.position+') from '+(t.club||'?')+' — '+fmtFee(t.fee)+(t.date?' on '+t.date:'')));}
     L('');
