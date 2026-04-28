@@ -335,7 +335,7 @@ function buildEvents(){
       headline:isIn
         ?`${t.name} joins${t.club?' from '+t.club:''}`
         :`${t.name} departs${t.club?' to '+t.club:''}`,
-      body:(t.position||'')+(t.season?' · '+t.season:'')+(freeDeal?' · Free transfer':fee?' · £'+fee.toFixed(1)+'M':''),
+      body:(t.position||'')+(t.season?' · '+t.season:'')+(freeDeal?' · Free transfer':fee?' · $'+fee.toFixed(1)+'M':''),
       icon:isIn?'↓':'↑',
       iconColor:isIn?'#34d399':'#f87171',
       badges:bigDeal?[{label:'Record Signing 💰',color:'#e8c56d30'}]:freeDeal?[{label:'Free Transfer',color:'#ffffff15'}]:[],
